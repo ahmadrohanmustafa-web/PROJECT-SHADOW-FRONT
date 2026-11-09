@@ -36,22 +36,46 @@ jobs:
           godot --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Export Windows build
+      - name: Export Windows build and verify output
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path build | Out-Null
-          godot --headless --path . --export-debug "Windows Desktop" build/PROJECT_SHADOW_FRONT_Prototype.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if (!(Test-Path "build/PROJECT_SHADOW_FRONT_Prototype.exe")) {
-            throw "Windows executable was not created."
+          $ErrorActionPreference = "Stop"
+          $buildDir = Join-Path $env:GITHUB_WORKSPACE "build"
+          $exePath = Join-Path $buildDir "PROJECT_SHADOW_FRONT_Prototype.exe"
+          New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+
+          godot --headless --path "$env:GITHUB_WORKSPACE" --export-debug "Windows Desktop" "$exePath"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Godot Windows export failed with exit code $LASTEXITCODE."
           }
+
+          Write-Host "Files produced in build directory:"
+          Get-ChildItem -LiteralPath $buildDir -Force -Recurse | ForEach-Object {
+            Write-Host "$($_.FullName) ($($_.Length) bytes)"
+          }
+
+          if (!(Test-Path -LiteralPath $exePath -PathType Leaf)) {
+            throw "Windows executable was not created at: $exePath"
+          }
+
+          $exe = Get-Item -LiteralPath $exePath
+          if ($exe.Length -le 0) {
+            throw "Windows executable is empty."
+          }
+
+          $pckFiles = @(Get-ChildItem -LiteralPath $buildDir -Filter "*.pck" -File -Recurse)
+          if ($pckFiles.Count -eq 0) {
+            throw "External PCK file was not created in the build directory."
+          }
+
+          Write-Host "Verified executable: $($exe.FullName) ($($exe.Length) bytes)"
+          Write-Host "Verified PCK files: $($pckFiles.Count)"
 
       - name: Upload prototype artifact
         uses: actions/upload-artifact@v4
         with:
           name: PROJECT-SHADOW-FRONT-Windows-Prototype
-          path: |
-            build/PROJECT_SHADOW_FRONT_Prototype.exe
-            build/PROJECT_SHADOW_FRONT_Prototype.pck
+          path: build/**
           if-no-files-found: error
           retention-days: 14
+          compression-level: 6
