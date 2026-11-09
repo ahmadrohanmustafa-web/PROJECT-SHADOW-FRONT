@@ -29,7 +29,7 @@ The repository now contains the first source-level playable prototype:
 - Crouch toggle and hold
 - A lightweight greybox test area with collision
 
-**Important:** source code has been committed, but it has not yet been validated in the Godot editor or run in-game. There is no Windows installer or finished campaign build yet.
+**Validation status:** the prototype commit passed Godot 4.7.2 headless import/parse and a 120-frame main-scene startup check in GitHub Actions. A small follow-up jump-input fix is awaiting its own run. Interactive gameplay, Windows export, and target-laptop performance are not yet tested. There is no Windows installer or finished campaign build yet.
 
 ## Project principles
 - Original fictional setting, characters, story, factions, locations, and equipment.
