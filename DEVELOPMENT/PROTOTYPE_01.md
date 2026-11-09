@@ -11,15 +11,18 @@
 - WASD movement
 - Sprint with a modest field-of-view transition
 - Jump
-- Crouch toggle with C and hold with Ctrl
+- C crouch toggle and Ctrl crouch hold
 - Escape to release/capture the mouse; click to recapture
 - Lightweight greybox room with basic collision
 - On-screen control reminder
 
-## Deliberately not included
-- Weapons or real-world handling simulation
-- Combat, AI squad members, campaign missions, or cinematic sequences
-- Final art, final audio, save system, settings menu, or controller support
+## Automated validation
+GitHub Actions runs the following checks on pushes and pull requests to `main`:
+1. Install the pinned Godot 4.7.2 standard build.
+2. Import and parse the project in headless editor mode.
+3. Launch the main scene headlessly for 120 frames.
+
+A passing workflow verifies import/parse and basic scene startup. It does not prove visual correctness, input feel, frame rate, or compatibility on the target laptop.
 
 ## Manual validation checklist
 - [ ] Project opens in Godot 4.7.2 without parse/import errors
@@ -34,4 +37,4 @@
 - [ ] Exported Windows build launches outside the editor
 
 ## Status
-Implemented in source. Not yet engine-validated, automated-tested, or playtested. No performance claim is made until the exported build is measured on the target laptop.
+Source implemented and committed. Automated validation workflow is configured; the first GitHub Actions runs are currently in progress. No successful automated test, gameplay test, or target-laptop performance claim is recorded yet.
