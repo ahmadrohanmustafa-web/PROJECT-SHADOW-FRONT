@@ -1,41 +1,50 @@
 # Development Roadmap
 
+## Release target
+A standalone Windows single-player campaign that the player can download, install, and launch without opening a development editor.
+
+Target hardware: Intel Core i5-6200U class CPU, Intel HD Graphics 520 class integrated GPU, 16 GB RAM, SSD. Initial baseline: 1280x720 on low settings.
+
+Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not inflate the build with unnecessary content.
+
 ## Phase 0 — Foundation
 - [x] Create repository and initial project documentation.
 - [x] Establish original-IP and safety boundaries.
-- [ ] Select engine and target platform.
-- [ ] Record exact engine version, language, build tools, and minimum hardware target.
-- [ ] Add contribution, asset licensing, and branching conventions.
+- [x] Select Godot 4.x Compatibility renderer as engine direction.
+- [ ] Pin exact stable engine version and export templates.
+- [ ] Record asset licensing and contribution conventions.
 
-## Phase 1 — Technical prototype
-- [ ] Create a clean engine project and reproducible build instructions.
-- [ ] Implement first-person movement and camera.
-- [ ] Implement input rebinding and accessibility settings.
-- [ ] Add a greybox test level and interaction system.
-- [ ] Add basic audio buses and subtitles.
-- [ ] Establish performance and memory baselines.
+## Phase 1 — Playable technical prototype
+- [ ] Create a reproducible Godot Windows project.
+- [ ] Implement first-person movement, camera, and input actions.
+- [ ] Add remappable controls, sensitivity, and accessibility settings.
+- [ ] Create a small greybox test environment.
+- [ ] Add interaction prompts and basic objective flow.
+- [ ] Add audio buses, subtitles, and settings persistence.
+- [ ] Export a Windows build and measure performance on target hardware.
 
 ## Phase 2 — Vertical slice
-- [ ] Build one short, complete mission from opening scene to debrief.
-- [ ] Add one companion with follow/regroup/story-reaction behaviours.
-- [ ] Add dialogue, objective tracking, save/checkpoint flow, and mission transitions.
-- [ ] Add placeholder environment art and original/cleared audio.
+- [ ] Build one short complete mission from opening scene to debrief.
+- [ ] Add one companion with dependable follow/regroup/story reactions.
+- [ ] Add dialogue, objective tracking, checkpoints, save/load, and mission transitions.
+- [ ] Add original placeholder art, animation, and licensed/original audio.
 - [ ] Run automated checks and structured playtests.
-- [ ] Review performance on the actual target machine.
+- [ ] Measure frame rate, memory, loading, and stability on the actual laptop.
 
 ## Phase 3 — Campaign production
 - [ ] Lock story bible and mission beat sheets.
 - [ ] Build reusable mission, dialogue, cinematic, save, and companion systems.
 - [ ] Produce missions in small, testable increments.
 - [ ] Track narrative continuity and asset provenance.
-- [ ] Conduct mission-by-mission playtests.
+- [ ] Playtest every mission and the full campaign.
 
-## Phase 4 — Polish and release preparation
-- [ ] Accessibility and controls review.
-- [ ] Audio mix and subtitle review.
-- [ ] Performance, stability, and save-data testing.
-- [ ] Full-campaign playthroughs and regression testing.
-- [ ] Package, release notes, and known-issues documentation.
+## Phase 4 — Polish and release
+- [ ] Controls, accessibility, subtitle, and audio-mix review.
+- [ ] Graphics presets and performance tuning.
+- [ ] Save-data, stability, and regression testing.
+- [ ] Full-campaign playthroughs.
+- [ ] Package a standalone Windows installer/archive within the 20 GB ceiling.
+- [ ] Publish release notes and known issues.
 
 ## Milestone rule
-Do not move a feature to complete without a linked commit, test result, or playtest note appropriate to that feature.
+Do not call a feature complete merely because code exists. Track it as Designed, Implemented, Automated-tested, Playtested, and Polished. State clearly which evidence exists.
