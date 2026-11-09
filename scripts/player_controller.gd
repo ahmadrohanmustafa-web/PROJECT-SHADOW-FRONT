@@ -20,6 +20,7 @@ class_name ShadowFrontPlayer
 
 var gravity: float = float(ProjectSettings.get_setting("physics/3d/default_gravity"))
 var is_crouching: bool = false
+var crouch_toggled: bool = false
 var mouse_captured: bool = true
 var standing_capsule_height: float = 1.8
 var crouching_capsule_height: float = 1.2
@@ -41,20 +42,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			_toggle_mouse_capture()
 		elif event.keycode == KEY_C:
-			_set_crouching(not is_crouching)
+			crouch_toggled = not crouch_toggled
+			_set_crouching(crouch_toggled or Input.is_key_pressed(KEY_CTRL))
 
 	if event is InputEventMouseButton and event.pressed and not mouse_captured:
 		_toggle_mouse_capture()
 
 func _physics_process(delta: float) -> void:
+	_set_crouching(crouch_toggled or Input.is_key_pressed(KEY_CTRL))
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
 	if Input.is_key_pressed(KEY_SPACE) and is_on_floor() and not is_crouching:
 		velocity.y = jump_velocity
-
-	if Input.is_key_pressed(KEY_CTRL):
-		_set_crouching(true)
 
 	var input_vector := Vector2.ZERO
 	if Input.is_key_pressed(KEY_A):
