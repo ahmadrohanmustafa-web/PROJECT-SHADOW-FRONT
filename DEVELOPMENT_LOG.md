@@ -8,8 +8,10 @@
 - Added the initial Godot project configuration and a greybox first-person movement prototype.
 - Added player movement, mouse look, sprint, crouch, jump, and a simple collision test area.
 - Added a prototype scope and manual validation checklist.
-- Source files are committed, but the project has not yet been opened in the Godot editor or run by the engine.
-- No automated test, Windows export, or target-laptop playtest has passed yet.
+- Added a GitHub Actions validation workflow using the pinned Godot 4.7.2 standard build.
+- Confirmed a successful headless import/parse and 120-frame main-scene startup run on the prototype commit.
+- Updated jump input to trigger on a fresh key press rather than continuously while Space is held; the follow-up workflow run is pending.
+- No interactive gameplay test, Windows export, or target-laptop playtest has passed yet.
 
 ### Next action
-Run the project through Godot 4.7.2 headless/editor validation, fix any parse or scene errors, then test the exported Windows build and measure performance on the target laptop.
+Finish validation of the latest jump-input change, then add an exported Windows build check and arrange a real interactive test on the target laptop.
