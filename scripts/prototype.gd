@@ -11,7 +11,8 @@ func _ready() -> void:
 func _create_environment() -> void:
 	var world_environment := WorldEnvironment.new()
 	var environment := Environment.new()
-	environment.background_mode = Environment.BG_SKY
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.12, 0.16, 0.2)
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(0.48, 0.53, 0.62)
 	environment.ambient_light_energy = 0.65
@@ -69,9 +70,9 @@ func _create_hud() -> void:
 	layer.add_child(panel)
 
 	var label := Label.new()
-	label.position = Vector2(32.0, 27.0)
+	label.position = Vector2(14.0, 12.0)
 	label.size = Vector2(410.0, 88.0)
-	label.text = "SHADOW FRONT  |  MOVEMENT TEST\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL / C Crouch   Mouse Look   ESC Release Mouse"
+	label.text = "SHADOW FRONT  |  MOVEMENT TEST\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL Hold / C Toggle Crouch   Mouse Look   ESC Release Mouse"
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
