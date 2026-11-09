@@ -54,7 +54,7 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
-	if Input.is_key_pressed(KEY_SPACE) and is_on_floor() and not is_crouching:
+	if Input.is_key_just_pressed(KEY_SPACE) and is_on_floor() and not is_crouching:
 		velocity.y = jump_velocity
 
 	var input_vector := Vector2.ZERO
