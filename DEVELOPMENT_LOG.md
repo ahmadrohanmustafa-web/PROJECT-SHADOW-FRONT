@@ -3,10 +3,13 @@
 ## 2026-11-09 — Repository initialization
 - Confirmed GitHub repository access and push permission.
 - Confirmed default branch: `main`.
-- Confirmed repository initially contained only a minimal README.
-- Added the first design, story, gameplay, roadmap, and quality-gate documentation.
-- No game engine or executable project has been selected or created yet.
-- No game code, build, automated test, or gameplay test exists at this stage.
+- Added the original design, story, gameplay, roadmap, and quality-gate documentation.
+- Selected Godot 4.7.2 stable with the Compatibility renderer for Windows.
+- Added the initial Godot project configuration and a greybox first-person movement prototype.
+- Added player movement, mouse look, sprint, crouch, jump, and a simple collision test area.
+- Added a prototype scope and manual validation checklist.
+- Source files are committed, but the project has not yet been opened in the Godot editor or run by the engine.
+- No automated test, Windows export, or target-laptop playtest has passed yet.
 
 ### Next action
-Choose the engine and target platform before creating engine-specific project files.
+Run the project through Godot 4.7.2 headless/editor validation, fix any parse or scene errors, then test the exported Windows build and measure performance on the target laptop.
