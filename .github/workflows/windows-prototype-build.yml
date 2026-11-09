@@ -1,0 +1,57 @@
+name: Windows prototype build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "project.godot"
+      - "export_presets.cfg"
+      - "scenes/**"
+      - "scripts/**"
+      - ".github/workflows/windows-prototype-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-windows:
+    name: Export Windows prototype
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.7.2 and export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+
+      - name: Verify engine version
+        shell: pwsh
+        run: |
+          godot --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Export Windows build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          godot --headless --path . --export-debug "Windows Desktop" build/PROJECT_SHADOW_FRONT_Prototype.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (!(Test-Path "build/PROJECT_SHADOW_FRONT_Prototype.exe")) {
+            throw "Windows executable was not created."
+          }
+
+      - name: Upload prototype artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PROJECT-SHADOW-FRONT-Windows-Prototype
+          path: |
+            build/PROJECT_SHADOW_FRONT_Prototype.exe
+            build/PROJECT_SHADOW_FRONT_Prototype.pck
+          if-no-files-found: error
+          retention-days: 14
