@@ -37,4 +37,4 @@ A passing workflow verifies import/parse and basic scene startup. It does not pr
 - [ ] Exported Windows build launches outside the editor
 
 ## Status
-Source implemented and committed. Automated validation workflow is configured; the first GitHub Actions runs are currently in progress. No successful automated test, gameplay test, or target-laptop performance claim is recorded yet.
+Source implemented and committed. GitHub Actions successfully installed Godot 4.7.2, imported/parsed the project, and launched the main scene headlessly for 120 frames on the prototype commit. A small follow-up change prevents holding Space from repeatedly triggering a jump on landing; that latest change is awaiting its own workflow run. No interactive gameplay test, Windows export test, or target-laptop performance claim is recorded yet.
