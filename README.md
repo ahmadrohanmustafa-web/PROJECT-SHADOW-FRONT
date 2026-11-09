@@ -18,11 +18,18 @@ The finished Windows release should be downloadable, installable, and playable w
 - Absolute package ceiling: 20 GB.
 - This is a ceiling, not a requirement to fill the disk with unused assets. Use compression and quality tiers.
 
-## Engine direction
-Godot 4.x with the Compatibility renderer is the selected direction for a lightweight standalone Windows game. Exact stable engine version and export template will be pinned before the first executable build.
+## Engine
+Godot 4.7.2 stable, standard edition, Compatibility renderer. The engine patch is pinned for the first prototype milestone.
 
-## Development status
-This repository currently contains design and development documentation. It does not yet contain a playable build. Features will only be marked complete after appropriate tests and playtesting.
+## Current development status
+The repository now contains the first source-level playable prototype:
+- First-person mouse look
+- WASD movement
+- Sprint and jump
+- Crouch toggle and hold
+- A lightweight greybox test area with collision
+
+**Important:** source code has been committed, but it has not yet been validated in the Godot editor or run in-game. There is no Windows installer or finished campaign build yet.
 
 ## Project principles
 - Original fictional setting, characters, story, factions, locations, and equipment.
