@@ -57,7 +57,7 @@ func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_co
 	add_child(body)
 
 func _create_player() -> void:
-	var player := PLAYER_SCENE.instantiate()
+	var player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
 	player.position = Vector3(0.0, 0.0, 5.0)
 	add_child(player)
 
@@ -65,13 +65,13 @@ func _create_hud() -> void:
 	var layer := CanvasLayer.new()
 	var panel := ColorRect.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(440.0, 104.0)
+	panel.size = Vector2(600.0, 104.0)
 	panel.color = Color(0.025, 0.035, 0.045, 0.78)
 	layer.add_child(panel)
 
 	var label := Label.new()
 	label.position = Vector2(14.0, 12.0)
-	label.size = Vector2(410.0, 88.0)
+	label.size = Vector2(570.0, 88.0)
 	label.text = "SHADOW FRONT  |  MOVEMENT TEST\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL Hold / C Toggle Crouch   Mouse Look   ESC Release Mouse"
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
