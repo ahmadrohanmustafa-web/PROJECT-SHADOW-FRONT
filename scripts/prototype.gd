@@ -98,6 +98,7 @@ func _create_level() -> void:
 	_add_box("Data terminal pedestal", Vector3(0.0, 0.55, -24.0), Vector3(1.5, 1.1, 0.9), DARK_CONCRETE)
 	_add_box("Data terminal screen", Vector3(0.0, 1.35, -24.35), Vector3(1.1, 0.55, 0.12), Color(0.18, 0.34, 0.34))
 	_add_label("DATA TERMINAL", Vector3(0.0, 2.5, -23.2), 18, Color(0.55, 0.85, 0.82))
+	_add_label("PRESS E TO ACCESS INCIDENT LOG", Vector3(0.0, 2.9, -22.5), 14, Color(0.88, 0.76, 0.48))
 	_add_box("Extraction beacon base", Vector3(0.0, 0.15, 17.0), Vector3(2.4, 0.3, 2.4), DARK_CONCRETE)
 	_add_box("Extraction beacon mast", Vector3(0.0, 2.2, 17.0), Vector3(0.18, 4.1, 0.18), ACCENT, false)
 	_add_box("Extraction beacon crossbar", Vector3(0.0, 4.1, 17.0), Vector3(1.5, 0.12, 0.12), ACCENT, false)
