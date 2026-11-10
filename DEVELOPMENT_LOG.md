@@ -40,3 +40,9 @@ Complete and inspect the first Windows export artifact, then arrange a real inte
 - Unlocked Mission 02 in the campaign menu only when the Northstar save records Mission 01 as complete.
 - Kept the mission search/evidence-focused with no hostile engagement requirement and low-cost static geometry.
 - Automated validation and Windows export are triggered by the scene/script changes. Interactive playtesting remains outstanding.
+
+
+## 2026-11-10 — Mission 02 usability and smoke-test coverage
+- Added a dedicated Mission 02 pause overlay with Resume and Return to Campaign Menu actions.
+- Added a headless scene-launch step for Mission 02 to the Godot validation workflow, in addition to the campaign menu launch.
+- Mission 02 remains a greybox implementation; interactive testing and performance measurement on the target laptop are still required.
