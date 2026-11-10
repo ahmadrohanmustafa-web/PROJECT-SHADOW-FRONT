@@ -5,6 +5,7 @@ const SAVE_PATH := "user://shadow_front_save.cfg"
 const SAVE_SECTION := "northstar_first_contact"
 
 var continue_button: Button
+var mission_two_button: Button
 var status_label: Label
 
 func _ready() -> void:
@@ -97,6 +98,13 @@ func _build_interface() -> void:
 	mission_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mission_card.add_child(mission_text)
 
+	mission_two_button = Button.new()
+	mission_two_button.text = "02  /  THE QUIET DISTRICT  —  LOCKED"
+	mission_two_button.custom_minimum_size = Vector2(0.0, 48.0)
+	mission_two_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mission_two_button.pressed.connect(_start_mission_two)
+	layout.add_child(mission_two_button)
+
 	var quit_button := Button.new()
 	quit_button.text = "QUIT TO DESKTOP"
 	quit_button.custom_minimum_size = Vector2(0.0, 46.0)
@@ -133,6 +141,9 @@ func _refresh_continue_state() -> void:
 
 func _continue_campaign() -> void:
 	get_tree().change_scene_to_file(PROTOTYPE_SCENE)
+
+func _start_mission_two() -> void:
+	get_tree().change_scene_to_file("res://scenes/mission_02.tscn")
 
 func _start_new_campaign() -> void:
 	var config := ConfigFile.new()
