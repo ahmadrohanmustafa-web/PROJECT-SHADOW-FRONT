@@ -15,18 +15,18 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - [ ] Record asset licensing and contribution conventions.
 
 ## Phase 1 — Playable technical prototype
-- [ ] Create a reproducible Godot Windows project.
-- [ ] Implement first-person movement, camera, and input actions.
+- [x] Create a reproducible Godot Windows project.
+- [x] Implement first-person movement, camera, and input actions.
 - [ ] Add remappable controls, sensitivity, and accessibility settings.
-- [ ] Create a small greybox test environment.
-- [ ] Add interaction prompts and basic objective flow.
+- [x] Create a small greybox test environment.
+- [x] Add interaction prompts and basic objective flow.
 - [ ] Add audio buses, subtitles, and settings persistence.
 - [ ] Export a Windows build and measure performance on target hardware.
 
 ## Phase 2 — Vertical slice
-- [ ] Build one short complete mission from opening scene to debrief.
-- [ ] Add one companion with dependable follow/regroup/story reactions.
-- [ ] Add dialogue, objective tracking, checkpoints, save/load, and mission transitions.
+- [x] Build a first source-level mission flow from briefing to debrief (manual playtest still pending).
+- [x] Add one prototype companion with basic follow and check-in dialogue (navigation and obstacle avoidance pending).
+- [ ] Add save/load and mission transitions; objective tracking, a checkpoint, and basic dialogue are implemented.
 - [ ] Add original placeholder art, animation, and licensed/original audio.
 - [ ] Run automated checks and structured playtests.
 - [ ] Measure frame rate, memory, loading, and stability on the actual laptop.
@@ -45,6 +45,12 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - [ ] Full-campaign playthroughs.
 - [ ] Package a standalone Windows installer/archive within the 20 GB ceiling.
 - [ ] Publish release notes and known issues.
+
+## Current vertical-slice evidence
+- Northstar has a deployment briefing, ordered objectives, a warehouse checkpoint, an interactive terminal evidence screen, an extraction objective, and a mission debrief.
+- Elias Rook has a lightweight follower controller and basic check-in dialogue. This is not yet production-grade navigation or animation.
+- Godot headless validation has passed for the terminal/debrief implementation before the latest prompt/documentation-only updates. Latest CI status should be checked before treating the newest commit as validated.
+- No manual gameplay test or Intel HD 520 performance measurement has been completed.
 
 ## Milestone rule
 Do not call a feature complete merely because code exists. Track it as Designed, Implemented, Automated-tested, Playtested, and Polished. State clearly which evidence exists.
