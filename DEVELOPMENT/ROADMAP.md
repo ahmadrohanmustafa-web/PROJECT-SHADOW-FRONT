@@ -35,7 +35,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 ## Phase 3 — Campaign production
 - [ ] Lock story bible and mission beat sheets.
 - [ ] Build reusable mission, dialogue, cinematic, save, and companion systems; local save/settings foundations are implemented.
-- [ ] Produce missions in small, testable increments.
+- [x] Produce the first playable blockout of Mission 02 with four objectives, Nadia check-in, dispatch evidence interaction, and debrief.\n- [ ] Produce remaining campaign missions in small, testable increments.
 - [ ] Track narrative continuity and asset provenance.
 - [ ] Playtest every mission and the full campaign.
 
@@ -52,7 +52,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - Elias Rook has a lightweight follower with raycast-based obstacle steering and objective-context check-in dialogue. This is not production-grade navigation or animation.
 - Northstar progress and checkpoint position are persisted locally through Godot ConfigFile under `user://`; save/load still needs runtime playtesting.
 - A pause menu now exposes resume, confirmed mission restart, manual progress save, low-detail mode, mouse sensitivity, field of view, and invert-Y settings, with settings persisted locally.
-- Mission 02, **The Quiet District**, has a complete narrative/gameplay beat sheet and acceptance tests; it is designed, not yet playable.
+- Mission 02, **The Quiet District**, now has a playable low-detail blockout with a briefing, clinic check-in, municipal archive interaction, extraction return, and debrief. Manual playtesting remains outstanding.
 - Godot headless validation has passed for the terminal/debrief implementation before the latest prompt/documentation-only updates. Latest CI status should be checked before treating the newest commit as validated.
 - No manual gameplay test or Intel HD 520 performance measurement has been completed.
 
