@@ -344,6 +344,7 @@ func _open_terminal_intel() -> void:
 	panel.add_child(prompt)
 	add_child(intel_layer)
 	set_meta("intel_overlay_layer", intel_layer)
+	pause_menu.set_pause_allowed(false)
 	player.set_physics_process(false)
 	companion.set_process(false)
 	player.mouse_captured = false
@@ -356,6 +357,7 @@ func _close_terminal_intel() -> void:
 	if is_instance_valid(intel_layer):
 		intel_layer.queue_free()
 	remove_meta("intel_overlay_layer")
+	pause_menu.set_pause_allowed(true)
 	player.set_physics_process(true)
 	companion.set_process(true)
 	player.mouse_captured = true
@@ -414,6 +416,7 @@ func _show_mission_complete_screen() -> void:
 	panel.add_child(status)
 	add_child(complete_layer)
 	set_meta("mission_complete_layer", complete_layer)
+	pause_menu.set_pause_allowed(false)
 	player.set_physics_process(false)
 	companion.set_process(false)
 	player.mouse_captured = false
@@ -500,6 +503,7 @@ func _create_deployment_briefing() -> void:
 	player.mouse_captured = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	set_meta("deployment_briefing_layer", briefing_layer)
+	pause_menu.set_pause_allowed(false)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -513,6 +517,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if saved_mission_complete:
 				_show_mission_complete_screen()
 			else:
+				pause_menu.set_pause_allowed(true)
 				player.set_physics_process(true)
 				companion.set_process(true)
 				player.mouse_captured = true
