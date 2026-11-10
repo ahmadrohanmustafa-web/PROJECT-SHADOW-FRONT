@@ -18,7 +18,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - [x] Create a reproducible Godot Windows project.
 - [x] Add a campaign front end with Continue, New Campaign, save detection, and mission availability.
 - [x] Implement first-person movement, camera, and input actions.
-- [ ] Add remappable controls; mouse sensitivity, field of view, invert-Y, and low-detail settings are configurable and saved locally.
+- [ ] Add remappable controls; mouse sensitivity, field of view, invert-Y, and low-detail settings are configurable and saved locally. Mission 02 also has a dedicated pause/resume and campaign-return overlay.
 - [x] Create a small greybox test environment.
 - [x] Add interaction prompts and basic objective flow.
 - [ ] Add audio buses and subtitle presentation; basic graphics and mouse settings persistence is implemented.
