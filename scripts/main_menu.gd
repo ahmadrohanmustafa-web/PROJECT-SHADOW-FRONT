@@ -4,9 +4,12 @@ const PROTOTYPE_SCENE := "res://scenes/prototype.tscn"
 const SAVE_PATH := "user://shadow_front_save.cfg"
 const SAVE_SECTION := "northstar_first_contact"
 const MISSION_TWO_SAVE_SECTION := "the_quiet_district"
+const MISSION_THREE_SAVE_SECTION := "paper_trails"
+const MISSION_THREE_SCENE := "res://scenes/mission_03.tscn"
 
 var continue_button: Button
 var mission_two_button: Button
+var mission_three_button: Button
 var status_label: Label
 
 func _ready() -> void:
@@ -62,12 +65,12 @@ func _build_interface() -> void:
 	add_child(description)
 
 	var menu_panel := PanelContainer.new()
-	menu_panel.position = Vector2(700.0, 150.0)
-	menu_panel.size = Vector2(460.0, 420.0)
+	menu_panel.position = Vector2(690.0, 95.0)
+	menu_panel.size = Vector2(480.0, 530.0)
 	add_child(menu_panel)
 
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", 10)
 	menu_panel.add_child(layout)
 
 	var menu_heading := _make_label("CAMPAIGN", 24, Color(0.91, 0.91, 0.85))
@@ -106,6 +109,13 @@ func _build_interface() -> void:
 	mission_two_button.pressed.connect(_start_mission_two)
 	layout.add_child(mission_two_button)
 
+	mission_three_button = Button.new()
+	mission_three_button.text = "03  /  PAPER TRAILS  —  LOCKED"
+	mission_three_button.custom_minimum_size = Vector2(0.0, 48.0)
+	mission_three_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mission_three_button.pressed.connect(_start_mission_three)
+	layout.add_child(mission_three_button)
+
 	var quit_button := Button.new()
 	quit_button.text = "QUIT TO DESKTOP"
 	quit_button.custom_minimum_size = Vector2(0.0, 46.0)
@@ -113,7 +123,7 @@ func _build_interface() -> void:
 	layout.add_child(quit_button)
 
 	status_label = _make_label("BUILD  0.1  /  PROTOTYPE", 13, Color(0.48, 0.59, 0.61))
-	status_label.position = Vector2(700.0, 600.0)
+	status_label.position = Vector2(690.0, 640.0)
 	status_label.size = Vector2(460.0, 26.0)
 	add_child(status_label)
 
@@ -131,28 +141,42 @@ func _make_label(value: String, font_size: int, color: Color) -> Label:
 
 func _refresh_continue_state() -> void:
 	var config := ConfigFile.new()
-	var has_save := config.load(SAVE_PATH) == OK and config.get_value(SAVE_SECTION, "mission_id", "") == "northstar_first_contact"
-	continue_button.disabled = not has_save
+	var readable_save := config.load(SAVE_PATH) == OK
+	var has_save := readable_save and config.get_value(SAVE_SECTION, "mission_id", "") == "northstar_first_contact"
 	var northstar_complete := has_save and bool(config.get_value(SAVE_SECTION, "mission_complete", false))
+	var has_mission_two_save := readable_save and config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district"
+	var mission_two_complete := has_mission_two_save and bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false))
+	var has_mission_three_save := readable_save and config.get_value(MISSION_THREE_SAVE_SECTION, "mission_id", "") == "paper_trails"
+	continue_button.disabled = not has_save
 	mission_two_button.disabled = not northstar_complete
+	mission_three_button.disabled = not mission_two_complete
 	if northstar_complete:
-		var has_mission_two_save := config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district"
-		if has_mission_two_save:
-			mission_two_button.text = "02  /  THE QUIET DISTRICT  —  " + ("COMPLETED" if bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false)) else "RESUME")
-		else:
-			mission_two_button.text = "02  /  THE QUIET DISTRICT  —  AVAILABLE"
+		mission_two_button.text = "02  /  THE QUIET DISTRICT  —  " + ("COMPLETED" if mission_two_complete else ("RESUME" if has_mission_two_save else "AVAILABLE"))
+	if mission_two_complete:
+		mission_three_button.text = "03  /  PAPER TRAILS  —  " + ("COMPLETED" if bool(config.get_value(MISSION_THREE_SAVE_SECTION, "mission_complete", false)) else ("RESUME" if has_mission_three_save else "AVAILABLE"))
 	if has_save:
 		var objective := int(config.get_value(SAVE_SECTION, "objective_index", 0))
 		var completed := bool(config.get_value(SAVE_SECTION, "mission_complete", false))
-		status_label.text = "LOCAL SAVE FOUND  /  " + ("MISSION COMPLETE" if completed else "OBJECTIVE %d / 3" % (clampi(objective, 0, 2) + 1))
+		status_label.text = "LOCAL CAMPAIGN SAVE  /  " + ("NORTHSTAR COMPLETE" if completed else "NORTHSTAR OBJECTIVE %d / 3" % (clampi(objective, 0, 2) + 1))
 	else:
 		status_label.text = "NO CAMPAIGN SAVE  /  READY TO DEPLOY"
 
 func _continue_campaign() -> void:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) == OK:
+		if config.get_value(MISSION_THREE_SAVE_SECTION, "mission_id", "") == "paper_trails" and not bool(config.get_value(MISSION_THREE_SAVE_SECTION, "mission_complete", false)):
+			get_tree().change_scene_to_file(MISSION_THREE_SCENE)
+			return
+		if config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district" and not bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false)):
+			get_tree().change_scene_to_file("res://scenes/mission_02.tscn")
+			return
 	get_tree().change_scene_to_file(PROTOTYPE_SCENE)
 
 func _start_mission_two() -> void:
 	get_tree().change_scene_to_file("res://scenes/mission_02.tscn")
+
+func _start_mission_three() -> void:
+	get_tree().change_scene_to_file(MISSION_THREE_SCENE)
 
 func _start_new_campaign() -> void:
 	var config := ConfigFile.new()
@@ -160,6 +184,7 @@ func _start_new_campaign() -> void:
 	if load_error == OK:
 		config.erase_section(SAVE_SECTION)
 		config.erase_section(MISSION_TWO_SAVE_SECTION)
+		config.erase_section(MISSION_THREE_SAVE_SECTION)
 		var save_error := config.save(SAVE_PATH)
 		if save_error != OK:
 			status_label.text = "SAVE RESET FAILED  /  " + error_string(save_error)
