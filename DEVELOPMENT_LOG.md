@@ -16,3 +16,11 @@
 
 ### Next action
 Complete and inspect the first Windows export artifact, then arrange a real interactive test on the target laptop.
+
+
+## 2026-11-10 — Controls and pause-flow improvements
+- Added persistent field-of-view and invert-Y controls to the pause menu.
+- Added a pause-allowed gate so modal briefing/intel/debrief states can prevent accidental pause-menu opening.
+- Kept settings within the lightweight Compatibility-renderer prototype.
+- Previous restart/save update passed Godot headless validation and Windows export; this controls batch is awaiting CI.
+- Interactive gameplay and target-laptop testing remain outstanding.
