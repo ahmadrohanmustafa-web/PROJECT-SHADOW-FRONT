@@ -25,8 +25,8 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 
 ## Phase 2 — Vertical slice
 - [x] Build a first source-level mission flow from briefing to debrief (manual playtest still pending).
-- [x] Add one prototype companion with basic follow and check-in dialogue (navigation and obstacle avoidance pending).
-- [ ] Add save/load and mission transitions; objective tracking, a checkpoint, and basic dialogue are implemented.
+- [x] Add one prototype companion with follow, raycast-based lightweight obstacle steering, and objective-context check-in dialogue (full navigation/pathfinding pending).
+- [x] Add local save/load for Northstar objective progress and checkpoint recovery; mission transitions remain pending.
 - [ ] Add original placeholder art, animation, and licensed/original audio.
 - [ ] Run automated checks and structured playtests.
 - [ ] Measure frame rate, memory, loading, and stability on the actual laptop.
@@ -48,7 +48,8 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 
 ## Current vertical-slice evidence
 - Northstar has a deployment briefing, ordered objectives, a warehouse checkpoint, an interactive terminal evidence screen, an extraction objective, and a mission debrief.
-- Elias Rook has a lightweight follower controller and basic check-in dialogue. This is not yet production-grade navigation or animation.
+- Elias Rook has a lightweight follower with raycast-based obstacle steering and objective-context check-in dialogue. This is not production-grade navigation or animation.
+- Northstar progress and checkpoint position are persisted locally through Godot ConfigFile under `user://`; save/load still needs runtime playtesting.
 - Godot headless validation has passed for the terminal/debrief implementation before the latest prompt/documentation-only updates. Latest CI status should be checked before treating the newest commit as validated.
 - No manual gameplay test or Intel HD 520 performance measurement has been completed.
 
