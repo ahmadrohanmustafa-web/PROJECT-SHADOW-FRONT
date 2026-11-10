@@ -21,7 +21,6 @@ func _ready() -> void:
 	_create_player()
 	_create_hud()
 	_create_mission_manager()
-	_create_save_system()
 	_create_objective_triggers()
 	_create_checkpoint_trigger()
 	_create_companion()
@@ -157,6 +156,7 @@ func _create_mission_manager() -> void:
 	mission_manager.objective_changed.connect(_on_mission_objective_changed)
 	mission_manager.mission_completed.connect(_on_mission_completed)
 	add_child(mission_manager)
+	_create_save_system()
 	mission_manager.start_mission([
 		"Reach the warehouse loading bay",
 		"Recover the data from the terminal",
