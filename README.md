@@ -30,8 +30,10 @@ The repository now contains an expanded first-mission prototype:
 - Lightweight squad companion Elias Rook with basic follow behaviour and check-in dialogue
 - Interactive terminal intel record and mission debrief overlay
 - Extraction rendezvous and mission completion flow
+- Local save/checkpoint persistence
+- Pause menu with manual save, low-detail graphics mode, and adjustable mouse sensitivity
 
-**Validation status:** recent commits have passed Godot 4.7.2 headless import/parse and main-scene startup checks, and Windows prototype exports have succeeded. The latest terminal-interaction/debrief changes are awaiting their own CI results. Interactive gameplay and target-laptop performance are not yet tested. This remains a greybox prototype, not a finished campaign or installer.
+**Validation status:** recent commits have passed Godot 4.7.2 headless import/parse and main-scene startup checks, and Windows prototype exports have succeeded. The latest terminal-interaction/debrief changes are awaiting their own CI results. Interactive gameplay and target-laptop performance are not yet tested. A second mission design, *The Quiet District*, is documented but not implemented as a playable level. This remains a greybox prototype, not a finished campaign or installer.
 
 ## Project principles
 - Original fictional setting, characters, story, factions, locations, and equipment.
