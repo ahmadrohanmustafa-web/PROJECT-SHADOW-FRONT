@@ -12,6 +12,8 @@ var mission_status_label: Label
 var player: ShadowFrontPlayer
 var companion: ShadowFrontCompanion
 var mission_manager: ShadowFrontMissionManager
+var save_system: ShadowFrontSaveSystem
+var saved_mission_complete: bool = false
 
 func _ready() -> void:
 	_create_environment()
@@ -19,6 +21,7 @@ func _ready() -> void:
 	_create_player()
 	_create_hud()
 	_create_mission_manager()
+	_create_save_system()
 	_create_objective_triggers()
 	_create_checkpoint_trigger()
 	_create_companion()
@@ -159,6 +162,34 @@ func _create_mission_manager() -> void:
 		"Recover the data from the terminal",
 		"Return to the extraction rendezvous"
 	], player.global_position)
+	var progress := save_system.load_progress()
+	if not progress.is_empty():
+		mission_manager.checkpoint_position = progress["checkpoint"]
+		player.global_position = progress["checkpoint"]
+		mission_manager.current_objective_index = progress["objective_index"]
+		saved_mission_complete = progress["mission_complete"]
+		if saved_mission_complete:
+			mission_manager.current_objective_index = 2
+			mission_manager.is_active = false
+			mission_manager.is_complete = true
+		else:
+			mission_manager.is_active = true
+			mission_manager.is_complete = false
+			mission_manager.objective_changed.emit(mission_manager.current_objective_index, mission_manager.get_current_objective())
+
+func _create_save_system() -> void:
+	save_system = ShadowFrontSaveSystem.new()
+	save_system.name = "SaveSystem"
+	add_child(save_system)
+	mission_manager.checkpoint_changed.connect(_on_checkpoint_saved)
+
+func _save_current_progress() -> void:
+	if not is_instance_valid(save_system) or not is_instance_valid(mission_manager):
+		return
+	save_system.save_progress(mission_manager.current_objective_index, mission_manager.checkpoint_position, mission_manager.is_complete)
+
+func _on_checkpoint_saved(position: Vector3) -> void:
+	_save_current_progress()
 
 func _create_objective_triggers() -> void:
 	_add_objective_trigger("LoadingBayObjectiveTrigger", Vector3(0.0, 1.2, -14.0), 0)
@@ -185,6 +216,7 @@ func _on_objective_body_entered(body: Node3D, objective_index: int) -> void:
 	if objective_index != mission_manager.current_objective_index:
 		return
 	mission_manager.complete_current_objective()
+	_save_current_progress()
 
 func _on_mission_objective_changed(index: int, description: String) -> void:
 	mission_status_label.text = "%s  |  %s" % [mission_manager.get_objective_counter(), description]
@@ -193,6 +225,7 @@ func _on_mission_objective_changed(index: int, description: String) -> void:
 func _on_mission_completed() -> void:
 	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+	_save_current_progress()
 	_show_mission_complete_screen()
 
 func _create_checkpoint_trigger() -> void:
@@ -217,6 +250,7 @@ func _on_checkpoint_body_entered(body: Node3D) -> void:
 	if mission_manager.checkpoint_position.is_equal_approx(safe_position):
 		return
 	mission_manager.set_checkpoint(safe_position)
+	_save_current_progress()
 	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
 
@@ -233,7 +267,7 @@ func _on_companion_interaction() -> void:
 		return
 	if companion.global_position.distance_to(player.global_position) > 3.5:
 		return
-	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line()
+	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line(mission_manager.current_objective_index)
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
 
 func _open_terminal_intel() -> void:
@@ -307,6 +341,7 @@ func _close_terminal_intel() -> void:
 	player.mouse_captured = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	mission_manager.complete_current_objective()
+	_save_current_progress()
 	mission_status_label.text = "INTEL RECOVERED  |  Return to the extraction rendezvous"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.82))
 
