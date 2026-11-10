@@ -17,10 +17,10 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 ## Phase 1 — Playable technical prototype
 - [x] Create a reproducible Godot Windows project.
 - [x] Implement first-person movement, camera, and input actions.
-- [ ] Add remappable controls, sensitivity, and accessibility settings.
+- [ ] Add remappable controls and accessibility settings; mouse sensitivity and a low-detail graphics toggle are now configurable and saved locally.
 - [x] Create a small greybox test environment.
 - [x] Add interaction prompts and basic objective flow.
-- [ ] Add audio buses, subtitles, and settings persistence.
+- [ ] Add audio buses and subtitle presentation; basic graphics and mouse settings persistence is implemented.
 - [ ] Export a Windows build and measure performance on target hardware.
 
 ## Phase 2 — Vertical slice
@@ -33,7 +33,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 
 ## Phase 3 — Campaign production
 - [ ] Lock story bible and mission beat sheets.
-- [ ] Build reusable mission, dialogue, cinematic, save, and companion systems.
+- [ ] Build reusable mission, dialogue, cinematic, save, and companion systems; local save/settings foundations are implemented.
 - [ ] Produce missions in small, testable increments.
 - [ ] Track narrative continuity and asset provenance.
 - [ ] Playtest every mission and the full campaign.
@@ -50,6 +50,8 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - Northstar has a deployment briefing, ordered objectives, a warehouse checkpoint, an interactive terminal evidence screen, an extraction objective, and a mission debrief.
 - Elias Rook has a lightweight follower with raycast-based obstacle steering and objective-context check-in dialogue. This is not production-grade navigation or animation.
 - Northstar progress and checkpoint position are persisted locally through Godot ConfigFile under `user://`; save/load still needs runtime playtesting.
+- A pause menu now exposes resume, manual progress save, low-detail mode, and mouse-sensitivity settings, with settings persisted locally.
+- Mission 02, **The Quiet District**, has a complete narrative/gameplay beat sheet and acceptance tests; it is designed, not yet playable.
 - Godot headless validation has passed for the terminal/debrief implementation before the latest prompt/documentation-only updates. Latest CI status should be checked before treating the newest commit as validated.
 - No manual gameplay test or Intel HD 520 performance measurement has been completed.
 
