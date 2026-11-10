@@ -535,7 +535,7 @@ func _create_hud() -> void:
 	var label := Label.new()
 	label.position = Vector2(14.0, 12.0)
 	label.size = Vector2(570.0, 80.0)
-	label.text = "PROJECT: SHADOW FRONT  |  NORTHSTAR TERMINAL\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL / C Crouch   E Squad Check-in\nMouse Look   ESC Release Mouse"
+	label.text = "PROJECT: SHADOW FRONT  |  NORTHSTAR TERMINAL\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL / C Crouch   E Squad Check-in\nMouse Look   ESC Release Mouse   P Pause"
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
