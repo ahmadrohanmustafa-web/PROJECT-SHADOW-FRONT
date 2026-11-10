@@ -4,6 +4,8 @@ const PLAYER_SCENE: PackedScene = preload("res://scenes/player.tscn")
 const WALL := Color(0.16, 0.20, 0.22)
 const BUILDING := Color(0.34, 0.37, 0.35)
 const ACCENT := Color(0.72, 0.48, 0.22)
+const SAVE_PATH := "user://shadow_front_save.cfg"
+const SAVE_SECTION := "the_quiet_district"
 
 var player: ShadowFrontPlayer
 var companion: ShadowFrontCompanion
@@ -15,6 +17,7 @@ var objective_index: int = 0
 var interaction_cooldown: bool = false
 var pause_layer: CanvasLayer
 var is_paused: bool = false
+var saved_mission_complete: bool = false
 
 const OBJECTIVES: Array[String] = [
 	"Reach the Larkspur clinic entrance",
@@ -29,6 +32,7 @@ func _ready() -> void:
 	_create_player()
 	_create_companion()
 	_create_hud()
+	_load_progress()
 	_show_briefing()
 
 func _create_environment() -> void:
@@ -207,10 +211,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 			briefing_layer.queue_free()
 			briefing_layer = null
-			player.set_physics_process(true)
-			companion.set_process(true)
-			player.mouse_captured = true
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			if saved_mission_complete:
+				_show_debrief()
+			else:
+				player.set_physics_process(true)
+				companion.set_process(true)
+				player.mouse_captured = true
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
 		return
 	if is_instance_valid(debrief_layer):
@@ -308,13 +315,45 @@ func _complete_objective() -> void:
 	if objective_index >= OBJECTIVES.size():
 		return
 	objective_index += 1
+	_save_progress()
 	if objective_index >= OBJECTIVES.size():
+		saved_mission_complete = true
+		_save_progress()
 		objective_label.text = "ALL OBJECTIVES COMPLETE  |  Larkspur team accounted for"
 		_show_debrief()
 	else:
 		objective_label.text = "OBJECTIVE %d / 4  |  %s" % [objective_index + 1, OBJECTIVES[objective_index]]
 
+func _load_progress() -> void:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return
+	if config.get_value(SAVE_SECTION, "mission_id", "") != "the_quiet_district":
+		return
+	objective_index = clampi(int(config.get_value(SAVE_SECTION, "objective_index", 0)), 0, OBJECTIVES.size())
+	saved_mission_complete = bool(config.get_value(SAVE_SECTION, "mission_complete", false))
+	if saved_mission_complete:
+		objective_index = OBJECTIVES.size()
+		objective_label.text = "MISSION COMPLETE  |  Larkspur team accounted for"
+	elif objective_index < OBJECTIVES.size():
+		objective_label.text = "OBJECTIVE %d / 4  |  %s" % [objective_index + 1, OBJECTIVES[objective_index]]
+
+func _save_progress() -> void:
+	var config := ConfigFile.new()
+	var load_error := config.load(SAVE_PATH)
+	if load_error != OK and load_error != ERR_FILE_NOT_FOUND:
+		push_warning("Could not read campaign save: %s" % error_string(load_error))
+		return
+	config.set_value(SAVE_SECTION, "mission_id", "the_quiet_district")
+	config.set_value(SAVE_SECTION, "objective_index", clampi(objective_index, 0, OBJECTIVES.size()))
+	config.set_value(SAVE_SECTION, "mission_complete", saved_mission_complete)
+	var save_error := config.save(SAVE_PATH)
+	if save_error != OK:
+		push_warning("Could not save The Quiet District progress: %s" % error_string(save_error))
+
 func _show_debrief() -> void:
+	saved_mission_complete = true
+	_save_progress()
 	debrief_layer = _make_overlay("FIELD REPORT", "THE RECORD WAS CHANGED", "The two relief coordinators are safe. The municipal archive shows that the dispatch receipt was amended after their clinic check-in. The change carries the same VEYRA-7 reference recovered at Northstar.\n\nNadia: \"Someone edited the record after the fact. They wanted the timeline to tell a different story.\"\n\nMISSION COMPLETE  /  TEAM ACCOUNTED FOR  /  EVIDENCE SECURED")
 	player.set_physics_process(false)
 	companion.set_process(false)
