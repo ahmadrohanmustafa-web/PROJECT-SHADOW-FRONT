@@ -263,6 +263,16 @@ func _create_pause_menu() -> void:
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
 	pause_menu.configure(player, save_system, mission_manager, world_environment_node)
+	pause_menu.restart_requested.connect(_restart_mission)
+
+func _restart_mission() -> void:
+	if is_instance_valid(save_system):
+		var clear_error := save_system.clear_progress()
+		if clear_error != OK:
+			push_warning("Could not clear the previous mission save: %s" % error_string(clear_error))
+	get_tree().paused = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().reload_current_scene()
 
 func _create_companion() -> void:
 	companion = ShadowFrontCompanion.new()
