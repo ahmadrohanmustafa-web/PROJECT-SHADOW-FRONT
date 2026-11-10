@@ -161,7 +161,6 @@ func _create_mission_manager() -> void:
 
 func _create_objective_triggers() -> void:
 	_add_objective_trigger("LoadingBayObjectiveTrigger", Vector3(0.0, 1.2, -14.0), 0)
-	_add_objective_trigger("DataTerminalObjectiveTrigger", Vector3(0.0, 1.2, -24.0), 1)
 	_add_objective_trigger("ExtractionObjectiveTrigger", Vector3(0.0, 1.2, 17.0), 2)
 
 func _add_objective_trigger(trigger_name: String, trigger_position: Vector3, objective_index: int) -> void:
@@ -193,6 +192,7 @@ func _on_mission_objective_changed(index: int, description: String) -> void:
 func _on_mission_completed() -> void:
 	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+	_show_mission_complete_screen()
 
 func _create_checkpoint_trigger() -> void:
 	var checkpoint_area := Area3D.new()
@@ -234,6 +234,134 @@ func _on_companion_interaction() -> void:
 		return
 	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line()
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
+
+func _open_terminal_intel() -> void:
+	if has_meta("intel_overlay_layer") or mission_manager.current_objective_index != 1:
+		return
+	var intel_layer := CanvasLayer.new()
+	intel_layer.name = "TerminalIntel"
+	intel_layer.layer = 12
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	intel_layer.add_child(root)
+	var backdrop := ColorRect.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.008, 0.018, 0.024, 0.94)
+	root.add_child(backdrop)
+	var panel := ColorRect.new()
+	panel.position = Vector2(125.0, 105.0)
+	panel.size = Vector2(1030.0, 510.0)
+	panel.color = Color(0.045, 0.075, 0.078, 0.99)
+	root.add_child(panel)
+	var heading := Label.new()
+	heading.position = Vector2(48.0, 36.0)
+	heading.size = Vector2(930.0, 32.0)
+	heading.text = "NORTHSTAR TERMINAL  /  RECOVERED INCIDENT LOG 04"
+	heading.add_theme_color_override("font_color", Color(0.67, 0.84, 0.79))
+	heading.add_theme_font_size_override("font_size", 17)
+	panel.add_child(heading)
+	var title := Label.new()
+	title.position = Vector2(48.0, 88.0)
+	title.size = Vector2(930.0, 58.0)
+	title.text = "THE TRANSMISSION DOESN'T MATCH"
+	title.add_theme_color_override("font_color", Color(0.94, 0.91, 0.82))
+	title.add_theme_font_size_override("font_size", 30)
+	panel.add_child(title)
+	var rule := ColorRect.new()
+	rule.position = Vector2(48.0, 160.0)
+	rule.size = Vector2(930.0, 2.0)
+	rule.color = ACCENT
+	panel.add_child(rule)
+	var evidence := Label.new()
+	evidence.position = Vector2(48.0, 190.0)
+	evidence.size = Vector2(930.0, 210.0)
+	evidence.text = "LOCAL SYSTEM RECORD  /  02:14\\n\\nThe terminal log confirms that the emergency broadcast was authenticated after the Northstar relief convoy had already checked in safely. The public alert described the convoy as missing.\\n\\nA second entry references an external relay tagged VEYRA-7. The sender identity has been removed from this copy.\\n\\nElias: \\"That timestamp is wrong. Someone wanted the alert to look like it came first.\\""
+	evidence.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	evidence.add_theme_color_override("font_color", Color(0.82, 0.88, 0.86))
+	evidence.add_theme_font_size_override("font_size", 18)
+	panel.add_child(evidence)
+	var prompt := Label.new()
+	prompt.position = Vector2(48.0, 450.0)
+	prompt.size = Vector2(930.0, 30.0)
+	prompt.text = "DATA COPIED  /  PRESS ENTER TO CLOSE AND CONTINUE"
+	prompt.add_theme_color_override("font_color", Color(1.0, 0.78, 0.43))
+	prompt.add_theme_font_size_override("font_size", 17)
+	panel.add_child(prompt)
+	add_child(intel_layer)
+	set_meta("intel_overlay_layer", intel_layer)
+	player.set_physics_process(false)
+	companion.set_process(false)
+	player.mouse_captured = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _close_terminal_intel() -> void:
+	if not has_meta("intel_overlay_layer"):
+		return
+	var intel_layer := get_meta("intel_overlay_layer") as CanvasLayer
+	if is_instance_valid(intel_layer):
+		intel_layer.queue_free()
+	remove_meta("intel_overlay_layer")
+	player.set_physics_process(true)
+	companion.set_process(true)
+	player.mouse_captured = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	mission_manager.complete_current_objective()
+	mission_status_label.text = "INTEL RECOVERED  |  Return to the extraction rendezvous"
+	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.82))
+
+func _show_mission_complete_screen() -> void:
+	if has_meta("mission_complete_layer"):
+		return
+	var complete_layer := CanvasLayer.new()
+	complete_layer.name = "MissionDebrief"
+	complete_layer.layer = 14
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	complete_layer.add_child(root)
+	var backdrop := ColorRect.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.008, 0.015, 0.022, 0.92)
+	root.add_child(backdrop)
+	var panel := ColorRect.new()
+	panel.position = Vector2(150.0, 130.0)
+	panel.size = Vector2(980.0, 460.0)
+	panel.color = Color(0.045, 0.065, 0.075, 0.99)
+	root.add_child(panel)
+	var kicker := Label.new()
+	kicker.position = Vector2(52.0, 45.0)
+	kicker.size = Vector2(870.0, 28.0)
+	kicker.text = "PROJECT: SHADOW FRONT  /  FIELD REPORT"
+	kicker.add_theme_color_override("font_color", Color(0.67, 0.79, 0.81))
+	kicker.add_theme_font_size_override("font_size", 16)
+	panel.add_child(kicker)
+	var title := Label.new()
+	title.position = Vector2(52.0, 105.0)
+	title.size = Vector2(870.0, 62.0)
+	title.text = "MISSION COMPLETE"
+	title.add_theme_color_override("font_color", Color(0.90, 0.88, 0.78))
+	title.add_theme_font_size_override("font_size", 36)
+	panel.add_child(title)
+	var summary := Label.new()
+	summary.position = Vector2(52.0, 190.0)
+	summary.size = Vector2(870.0, 140.0)
+	summary.text = "NORTHSTAR: FIRST CONTACT\\n\\nThe terminal data is secured. The squad reached the rendezvous, but the recovered timestamp raises a new question: who sent the false alert, and why?"
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary.add_theme_color_override("font_color", Color(0.82, 0.87, 0.87))
+	summary.add_theme_font_size_override("font_size", 19)
+	panel.add_child(summary)
+	var status := Label.new()
+	status.position = Vector2(52.0, 370.0)
+	status.size = Vector2(870.0, 30.0)
+	status.text = "OBJECTIVES COMPLETE  /  DATA SECURED  /  SQUAD ACCOUNTED FOR"
+	status.add_theme_color_override("font_color", Color(0.58, 0.86, 0.66))
+	status.add_theme_font_size_override("font_size", 16)
+	panel.add_child(status)
+	add_child(complete_layer)
+	set_meta("mission_complete_layer", complete_layer)
+	player.set_physics_process(false)
+	companion.set_process(false)
+	player.mouse_captured = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _create_deployment_briefing() -> void:
 	var briefing_layer := CanvasLayer.new()
@@ -318,22 +446,32 @@ func _create_deployment_briefing() -> void:
 	set_meta("deployment_briefing_layer", briefing_layer)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E and not has_meta("deployment_briefing_layer"):
-		_on_companion_interaction()
-		_on_companion_interaction()
-	if not has_meta("deployment_briefing_layer"):
+	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
-	var briefing_layer := get_meta("deployment_briefing_layer") as CanvasLayer
-	if briefing_layer == null or not is_instance_valid(briefing_layer):
+	if has_meta("deployment_briefing_layer"):
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			var briefing_layer := get_meta("deployment_briefing_layer") as CanvasLayer
+			if is_instance_valid(briefing_layer):
+				briefing_layer.queue_free()
+			remove_meta("deployment_briefing_layer")
+			player.set_physics_process(true)
+			companion.set_process(true)
+			player.mouse_captured = true
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			get_viewport().set_input_as_handled()
 		return
-	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
-		briefing_layer.queue_free()
-		remove_meta("deployment_briefing_layer")
-		player.set_physics_process(true)
-		companion.set_process(true)
-		player.mouse_captured = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		get_viewport().set_input_as_handled()
+	if has_meta("intel_overlay_layer"):
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			_close_terminal_intel()
+			get_viewport().set_input_as_handled()
+		return
+	if has_meta("mission_complete_layer"):
+		return
+	if event.keycode == KEY_E:
+		if mission_manager.current_objective_index == 1 and player.global_position.distance_to(Vector3(0.0, 0.0, -24.0)) <= 3.5:
+			_open_terminal_intel()
+		else:
+			_on_companion_interaction()
 
 func _physics_process(_delta: float) -> void:
 	if is_instance_valid(player) and player.global_position.y < -5.0:
