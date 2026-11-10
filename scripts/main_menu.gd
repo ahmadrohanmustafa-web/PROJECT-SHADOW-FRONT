@@ -142,11 +142,11 @@ func _make_label(value: String, font_size: int, color: Color) -> Label:
 func _refresh_continue_state() -> void:
 	var config := ConfigFile.new()
 	var readable_save := config.load(SAVE_PATH) == OK
-	var has_save := readable_save and config.get_value(SAVE_SECTION, "mission_id", "") == "northstar_first_contact"
-	var northstar_complete := has_save and bool(config.get_value(SAVE_SECTION, "mission_complete", false))
-	var has_mission_two_save := readable_save and config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district"
-	var mission_two_complete := has_mission_two_save and bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false))
-	var has_mission_three_save := readable_save and config.get_value(MISSION_THREE_SAVE_SECTION, "mission_id", "") == "paper_trails"
+	var has_save: bool = readable_save and str(config.get_value(SAVE_SECTION, "mission_id", "")) == "northstar_first_contact"
+	var northstar_complete: bool = has_save and bool(config.get_value(SAVE_SECTION, "mission_complete", false))
+	var has_mission_two_save: bool = readable_save and str(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "")) == "the_quiet_district"
+	var mission_two_complete: bool = has_mission_two_save and bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false))
+	var has_mission_three_save: bool = readable_save and str(config.get_value(MISSION_THREE_SAVE_SECTION, "mission_id", "")) == "paper_trails"
 	continue_button.disabled = not has_save
 	mission_two_button.disabled = not northstar_complete
 	mission_three_button.disabled = not mission_two_complete
