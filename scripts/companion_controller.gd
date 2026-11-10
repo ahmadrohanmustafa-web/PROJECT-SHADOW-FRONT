@@ -19,8 +19,15 @@ var radio_lines: Array[String] = [
 	"Terminal is behind us. Stay close until we're clear."
 ]
 
-func get_radio_line() -> String:
-	var line := radio_lines[dialogue_index % radio_lines.size()]
+func get_radio_line(objective_index: int = -1) -> String:
+	var contextual_index := dialogue_index
+	if objective_index == 0:
+		contextual_index = 1
+	elif objective_index == 1:
+		contextual_index = 2
+	elif objective_index == 2:
+		contextual_index = 3 + (dialogue_index % 2)
+	var line := radio_lines[contextual_index % radio_lines.size()]
 	dialogue_index += 1
 	return line
 
@@ -33,6 +40,7 @@ func _process(delta: float) -> void:
 	var behind_target := follow_target.global_transform.basis * Vector3(1.25, 0.0, 2.0)
 	var desired_position := follow_target.global_position + behind_target
 	desired_position.y = 0.0
+	desired_position += _get_obstacle_avoidance(desired_position)
 	var distance := global_position.distance_to(desired_position)
 	if distance > follow_distance:
 		var speed_scale := 1.0
@@ -106,3 +114,29 @@ func _add_box(node_name: String, at: Vector3, dimensions: Vector3, material: Mat
 	mesh_instance.position = at
 	mesh_instance.material_override = material
 	add_child(mesh_instance)
+
+func _get_obstacle_avoidance(desired_position: Vector3) -> Vector3:
+	var origin := global_position + Vector3.UP * 1.0
+	var target := desired_position + Vector3.UP * 1.0
+	if origin.distance_to(target) < 0.8:
+		return Vector3.ZERO
+	var query := PhysicsRayQueryParameters3D.create(origin, target)
+	query.collision_mask = 1
+	if get_world_3d().direct_space_state.intersect_ray(query).is_empty():
+		return Vector3.ZERO
+	var side := (target - origin).cross(Vector3.UP).normalized()
+	if side.length_squared() < 0.01:
+		return Vector3.ZERO
+	var left_query := PhysicsRayQueryParameters3D.create(origin, origin + side * 1.8 + Vector3.UP)
+	left_query.collision_mask = 1
+	var right_query := PhysicsRayQueryParameters3D.create(origin, origin - side * 1.8 + Vector3.UP)
+	right_query.collision_mask = 1
+	var left_blocked := not get_world_3d().direct_space_state.intersect_ray(left_query).is_empty()
+	var right_blocked := not get_world_3d().direct_space_state.intersect_ray(right_query).is_empty()
+	if left_blocked and right_blocked:
+		return Vector3.ZERO
+	if left_blocked:
+		return -side * 1.15
+	if right_blocked:
+		return side * 1.15
+	return side * 1.15
