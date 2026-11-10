@@ -55,8 +55,6 @@ jobs:
           $ErrorActionPreference = "Stop"
           $buildDir = Join-Path $env:GITHUB_WORKSPACE "build"
           $exePath = Join-Path $buildDir "PROJECT_SHADOW_FRONT_Prototype.exe"
-          $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-export-stdout.txt"
-          $stderrPath = Join-Path $env:RUNNER_TEMP "godot-export-stderr.txt"
           $godotExe = Join-Path $env:USERPROFILE "godot\Godot_v4.7.2-stable_win64.exe"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 
@@ -67,21 +65,16 @@ jobs:
           Write-Host "Using Godot executable: $godotExe"
           Write-Host "Export destination: $exePath"
 
-          $godotArgs = @(
-            "--headless",
-            "--path", $env:GITHUB_WORKSPACE,
-            "--export-debug", "Windows Desktop",
-            $exePath
-          )
-          $process = Start-Process -FilePath $godotExe -ArgumentList $godotArgs -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+          # Invoke Godot directly so "Windows Desktop" remains one argument.
+          # Start-Process -ArgumentList flattens arrays and can split this preset name.
+          $exportOutput = & $godotExe --headless --path $env:GITHUB_WORKSPACE --export-debug "Windows Desktop" $exePath 2>&1
+          $exportExitCode = $LASTEXITCODE
 
-          Write-Host "Godot export stdout:"
-          if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
-          Write-Host "Godot export stderr:"
-          if (Test-Path $stderrPath) { Get-Content $stderrPath }
+          Write-Host "Godot export output:"
+          $exportOutput | ForEach-Object { Write-Host $_ }
 
-          if ($process.ExitCode -ne 0) {
-            throw "Godot Windows export failed with exit code $($process.ExitCode). See captured output above."
+          if ($exportExitCode -ne 0) {
+            throw "Godot Windows export failed with exit code $exportExitCode."
           }
 
           Write-Host "Files produced in build directory:"
