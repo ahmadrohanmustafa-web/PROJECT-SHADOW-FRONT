@@ -10,6 +10,7 @@ const ACCENT := Color(0.72, 0.48, 0.20)
 
 var mission_status_label: Label
 var player: ShadowFrontPlayer
+var companion: ShadowFrontCompanion
 var mission_manager: ShadowFrontMissionManager
 
 func _ready() -> void:
@@ -20,6 +21,8 @@ func _ready() -> void:
 	_create_mission_manager()
 	_create_objective_triggers()
 	_create_checkpoint_trigger()
+	_create_companion()
+	_create_extraction_zone()
 	_create_deployment_briefing()
 
 func _create_environment() -> void:
@@ -96,6 +99,10 @@ func _create_level() -> void:
 	_add_box("Data terminal pedestal", Vector3(0.0, 0.55, -24.0), Vector3(1.5, 1.1, 0.9), DARK_CONCRETE)
 	_add_box("Data terminal screen", Vector3(0.0, 1.35, -24.35), Vector3(1.1, 0.55, 0.12), Color(0.18, 0.34, 0.34))
 	_add_label("DATA TERMINAL", Vector3(0.0, 2.5, -23.2), 18, Color(0.55, 0.85, 0.82))
+	_add_box("Extraction beacon base", Vector3(0.0, 0.15, 17.0), Vector3(2.4, 0.3, 2.4), DARK_CONCRETE)
+	_add_box("Extraction beacon mast", Vector3(0.0, 2.2, 17.0), Vector3(0.18, 4.1, 0.18), ACCENT, false)
+	_add_box("Extraction beacon crossbar", Vector3(0.0, 4.1, 17.0), Vector3(1.5, 0.12, 0.12), ACCENT, false)
+	_add_label("EXTRACTION  /  RENDEZVOUS", Vector3(0.0, 4.8, 16.0), 20, Color(1.0, 0.76, 0.36))
 
 func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_color: Color, solid: bool = true) -> void:
 	var root: Node3D
@@ -149,12 +156,14 @@ func _create_mission_manager() -> void:
 	add_child(mission_manager)
 	mission_manager.start_mission([
 		"Reach the warehouse loading bay",
-		"Reach the data terminal inside the warehouse"
+		"Recover the data from the terminal",
+		"Return to the extraction rendezvous"
 	], player.global_position)
 
 func _create_objective_triggers() -> void:
 	_add_objective_trigger("LoadingBayObjectiveTrigger", Vector3(0.0, 1.2, -14.0), 0)
 	_add_objective_trigger("DataTerminalObjectiveTrigger", Vector3(0.0, 1.2, -24.0), 1)
+	_add_objective_trigger("ExtractionObjectiveTrigger", Vector3(0.0, 1.2, 17.0), 2)
 
 func _add_objective_trigger(trigger_name: String, trigger_position: Vector3, objective_index: int) -> void:
 	var objective_area := Area3D.new()
@@ -211,6 +220,42 @@ func _on_checkpoint_body_entered(body: Node3D) -> void:
 	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
 
+func _create_companion() -> void:
+	companion = ShadowFrontCompanion.new()
+	companion.name = "SquadCompanion"
+	companion.follow_target = player
+	companion.position = Vector3(2.0, 0.0, 13.0)
+	companion.set_process(false)
+	add_child(companion)
+
+func _create_extraction_zone() -> void:
+	var extraction_area := Area3D.new()
+	extraction_area.name = "ExtractionRendezvous"
+	extraction_area.position = Vector3(0.0, 1.0, 17.0)
+	extraction_area.collision_layer = 0
+	extraction_area.collision_mask = 1
+	var extraction_shape := CollisionShape3D.new()
+	var extraction_box := BoxShape3D.new()
+	extraction_box.size = Vector3(5.0, 2.0, 4.0)
+	extraction_shape.shape = extraction_box
+	extraction_area.add_child(extraction_shape)
+	extraction_area.body_entered.connect(_on_extraction_body_entered)
+	add_child(extraction_area)
+
+func _on_extraction_body_entered(body: Node3D) -> void:
+	if body != player or mission_manager.is_complete:
+		return
+	if mission_manager.current_objective_index == 2:
+		mission_manager.complete_current_objective()
+
+func _on_companion_interaction() -> void:
+	if not is_instance_valid(companion) or not is_instance_valid(player):
+		return
+	if companion.global_position.distance_to(player.global_position) > 3.5:
+		return
+	mission_status_label.text = "SQUAD LINK  |  I'm with you. Let's bring that data home."
+	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
+
 func _create_deployment_briefing() -> void:
 	var briefing_layer := CanvasLayer.new()
 	briefing_layer.name = "DeploymentBriefing"
@@ -256,7 +301,7 @@ func _create_deployment_briefing() -> void:
 	var briefing := Label.new()
 	briefing.position = Vector2(52.0, 198.0)
 	briefing.size = Vector2(950.0, 112.0)
-	briefing.text = "Northstar Terminal has gone silent. The last transmission ended before the night shift could confirm what happened. Your assignment is to enter the terminal, reach the warehouse, and recover the data left at its central console.\n\nThis is a solo reconnaissance assignment. Stay alert and follow the marked route."
+	briefing.text = "Northstar Terminal has gone silent. The last transmission ended before the night shift could confirm what happened. Enter the warehouse with your squad partner, recover the data from the central console, then return to the marked rendezvous.\n\nYour partner will keep pace and can be checked in with using E when nearby."
 	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	briefing.add_theme_color_override("font_color", Color(0.80, 0.85, 0.86))
 	briefing.add_theme_font_size_override("font_size", 18)
@@ -273,7 +318,7 @@ func _create_deployment_briefing() -> void:
 	var objectives := Label.new()
 	objectives.position = Vector2(52.0, 372.0)
 	objectives.size = Vector2(950.0, 60.0)
-	objectives.text = "01   Reach the warehouse loading bay\n02   Recover the data from the terminal"
+	objectives.text = "01   Reach the warehouse loading bay\n02   Recover the data from the terminal\n03   Return to the extraction rendezvous"
 	objectives.add_theme_color_override("font_color", Color(0.90, 0.92, 0.91))
 	objectives.add_theme_font_size_override("font_size", 18)
 	card.add_child(objectives)
@@ -288,11 +333,14 @@ func _create_deployment_briefing() -> void:
 
 	add_child(briefing_layer)
 	player.set_physics_process(false)
+	companion.set_process(false)
 	player.mouse_captured = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	set_meta("deployment_briefing_layer", briefing_layer)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+		_on_companion_interaction()
 	if not has_meta("deployment_briefing_layer"):
 		return
 	var briefing_layer := get_meta("deployment_briefing_layer") as CanvasLayer
@@ -302,6 +350,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		briefing_layer.queue_free()
 		remove_meta("deployment_briefing_layer")
 		player.set_physics_process(true)
+		companion.set_process(true)
 		player.mouse_captured = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
