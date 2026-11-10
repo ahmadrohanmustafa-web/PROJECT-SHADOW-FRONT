@@ -46,3 +46,9 @@ Complete and inspect the first Windows export artifact, then arrange a real inte
 - Added a dedicated Mission 02 pause overlay with Resume and Return to Campaign Menu actions.
 - Added a headless scene-launch step for Mission 02 to the Godot validation workflow, in addition to the campaign menu launch.
 - Mission 02 remains a greybox implementation; interactive testing and performance measurement on the target laptop are still required.
+
+## 2026-11-10 — Mission 02 campaign persistence
+- Added a dedicated save section for The Quiet District without overwriting Northstar progress or local settings.
+- Mission 02 restores its last completed objective, saves after each objective transition, and records mission completion.
+- The Mission 02 menu entry indicates available, resume, or completed state after Northstar unlocks it; New Campaign clears both mission progress sections while preserving unrelated settings.
+- CI launch validation and Windows export are required before this batch is considered automated-tested. Interactive save/restore testing remains outstanding.
