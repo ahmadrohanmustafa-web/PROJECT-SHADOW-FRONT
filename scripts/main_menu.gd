@@ -3,6 +3,7 @@ extends Control
 const PROTOTYPE_SCENE := "res://scenes/prototype.tscn"
 const SAVE_PATH := "user://shadow_front_save.cfg"
 const SAVE_SECTION := "northstar_first_contact"
+const MISSION_TWO_SAVE_SECTION := "the_quiet_district"
 
 var continue_button: Button
 var mission_two_button: Button
@@ -132,6 +133,14 @@ func _refresh_continue_state() -> void:
 	var config := ConfigFile.new()
 	var has_save := config.load(SAVE_PATH) == OK and config.get_value(SAVE_SECTION, "mission_id", "") == "northstar_first_contact"
 	continue_button.disabled = not has_save
+	var northstar_complete := has_save and bool(config.get_value(SAVE_SECTION, "mission_complete", false))
+	mission_two_button.disabled = not northstar_complete
+	if northstar_complete:
+		var has_mission_two_save := config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district"
+		if has_mission_two_save:
+			mission_two_button.text = "02  /  THE QUIET DISTRICT  —  " + ("COMPLETED" if bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false)) else "RESUME")
+		else:
+			mission_two_button.text = "02  /  THE QUIET DISTRICT  —  AVAILABLE"
 	if has_save:
 		var objective := int(config.get_value(SAVE_SECTION, "objective_index", 0))
 		var completed := bool(config.get_value(SAVE_SECTION, "mission_complete", false))
@@ -150,6 +159,7 @@ func _start_new_campaign() -> void:
 	var load_error := config.load(SAVE_PATH)
 	if load_error == OK:
 		config.erase_section(SAVE_SECTION)
+		config.erase_section(MISSION_TWO_SAVE_SECTION)
 		var save_error := config.save(SAVE_PATH)
 		if save_error != OK:
 			status_label.text = "SAVE RESET FAILED  /  " + error_string(save_error)
