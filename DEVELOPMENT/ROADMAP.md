@@ -17,7 +17,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 ## Phase 1 — Playable technical prototype
 - [x] Create a reproducible Godot Windows project.
 - [x] Implement first-person movement, camera, and input actions.
-- [ ] Add remappable controls and accessibility settings; mouse sensitivity and a low-detail graphics toggle are now configurable and saved locally.
+- [ ] Add remappable controls; mouse sensitivity, field of view, invert-Y, and low-detail settings are configurable and saved locally.
 - [x] Create a small greybox test environment.
 - [x] Add interaction prompts and basic objective flow.
 - [ ] Add audio buses and subtitle presentation; basic graphics and mouse settings persistence is implemented.
@@ -50,7 +50,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 - Northstar has a deployment briefing, ordered objectives, a warehouse checkpoint, an interactive terminal evidence screen, an extraction objective, and a mission debrief.
 - Elias Rook has a lightweight follower with raycast-based obstacle steering and objective-context check-in dialogue. This is not production-grade navigation or animation.
 - Northstar progress and checkpoint position are persisted locally through Godot ConfigFile under `user://`; save/load still needs runtime playtesting.
-- A pause menu now exposes resume, manual progress save, low-detail mode, and mouse-sensitivity settings, with settings persisted locally.
+- A pause menu now exposes resume, confirmed mission restart, manual progress save, low-detail mode, mouse sensitivity, field of view, and invert-Y settings, with settings persisted locally.
 - Mission 02, **The Quiet District**, has a complete narrative/gameplay beat sheet and acceptance tests; it is designed, not yet playable.
 - Godot headless validation has passed for the terminal/debrief implementation before the latest prompt/documentation-only updates. Latest CI status should be checked before treating the newest commit as validated.
 - No manual gameplay test or Intel HD 520 performance measurement has been completed.
