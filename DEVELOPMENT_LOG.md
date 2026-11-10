@@ -31,3 +31,12 @@ Complete and inspect the first Windows export artifact, then arrange a real inte
 - Added Continue and New Campaign flows, including local save detection and safe reset of the Northstar save section without touching player settings.
 - Kept the first mission as the available playable campaign entry; the front end does not imply later missions are playable.
 - Automated validation and Windows export queued by the code changes. Interactive menu testing remains outstanding.
+
+
+## 2026-11-10 — Mission 02 playable blockout
+- Added a separate playable Mission 02 scene, **The Quiet District**, using the existing first-person controller and lightweight squad companion.
+- Built a compact Larkspur Ward blockout with clinic, market frontage, municipal records office, transit shelter, and readable location signage.
+- Implemented briefing, four-step objective progression, Nadia check-in, archive evidence interaction, companion check-in, and mission debrief.
+- Unlocked Mission 02 in the campaign menu only when the Northstar save records Mission 01 as complete.
+- Kept the mission search/evidence-focused with no hostile engagement requirement and low-cost static geometry.
+- Automated validation and Windows export are triggered by the scene/script changes. Interactive playtesting remains outstanding.
