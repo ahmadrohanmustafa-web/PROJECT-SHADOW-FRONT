@@ -33,8 +33,13 @@ jobs:
       - name: Verify engine version
         shell: pwsh
         run: |
-          godot --version
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $godotCommand = Get-Command godot -ErrorAction Stop
+          Write-Host "Godot command: $($godotCommand.Source)"
+          & $godotCommand.Source --version
+          $versionExit = $LASTEXITCODE
+          if ($versionExit -ne 0) {
+            throw "Godot version check failed with exit code $versionExit."
+          }
 
       - name: Export Windows build and verify output
         shell: pwsh
@@ -42,16 +47,37 @@ jobs:
           $ErrorActionPreference = "Stop"
           $buildDir = Join-Path $env:GITHUB_WORKSPACE "build"
           $exePath = Join-Path $buildDir "PROJECT_SHADOW_FRONT_Prototype.exe"
+          $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-export-stdout.txt"
+          $stderrPath = Join-Path $env:RUNNER_TEMP "godot-export-stderr.txt"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 
-          godot --headless --path "$env:GITHUB_WORKSPACE" --export-debug "Windows Desktop" "$exePath"
-          if ($LASTEXITCODE -ne 0) {
-            throw "Godot Windows export failed with exit code $LASTEXITCODE."
+          $godotCommand = Get-Command godot -ErrorAction Stop
+          $godotExe = $godotCommand.Source
+          Write-Host "Using Godot executable: $godotExe"
+          Write-Host "Export destination: $exePath"
+
+          $godotArgs = @(
+            "--headless",
+            "--path", $env:GITHUB_WORKSPACE,
+            "--export-debug", "Windows Desktop",
+            $exePath
+          )
+          $process = Start-Process -FilePath $godotExe -ArgumentList $godotArgs -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+
+          Write-Host "Godot export stdout:"
+          if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
+          Write-Host "Godot export stderr:"
+          if (Test-Path $stderrPath) { Get-Content $stderrPath }
+
+          if ($process.ExitCode -ne 0) {
+            throw "Godot Windows export failed with exit code $($process.ExitCode). See captured output above."
           }
 
           Write-Host "Files produced in build directory:"
           Get-ChildItem -LiteralPath $buildDir -Force -Recurse | ForEach-Object {
-            Write-Host "$($_.FullName) ($($_.Length) bytes)"
+            if (!$_.PSIsContainer) {
+              Write-Host "$($_.FullName) ($($_.Length) bytes)"
+            }
           }
 
           if (!(Test-Path -LiteralPath $exePath -PathType Leaf)) {
