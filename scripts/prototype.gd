@@ -14,6 +14,8 @@ var companion: ShadowFrontCompanion
 var mission_manager: ShadowFrontMissionManager
 var save_system: ShadowFrontSaveSystem
 var saved_mission_complete: bool = false
+var world_environment_node: WorldEnvironment
+var pause_menu: ShadowFrontPauseMenu
 
 func _ready() -> void:
 	_create_environment()
@@ -24,10 +26,12 @@ func _ready() -> void:
 	_create_objective_triggers()
 	_create_checkpoint_trigger()
 	_create_companion()
+	_create_pause_menu()
 	_create_deployment_briefing()
 
 func _create_environment() -> void:
 	var world_environment := WorldEnvironment.new()
+	world_environment_node = world_environment
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color(0.30, 0.38, 0.43)
@@ -253,6 +257,12 @@ func _on_checkpoint_body_entered(body: Node3D) -> void:
 	_save_current_progress()
 	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
+
+func _create_pause_menu() -> void:
+	pause_menu = ShadowFrontPauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	add_child(pause_menu)
+	pause_menu.configure(player, save_system, mission_manager, world_environment_node)
 
 func _create_companion() -> void:
 	companion = ShadowFrontCompanion.new()
