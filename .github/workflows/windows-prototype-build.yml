@@ -65,16 +65,20 @@ jobs:
           Write-Host "Using Godot executable: $godotExe"
           Write-Host "Export destination: $exePath"
 
-          # Invoke Godot directly so "Windows Desktop" remains one argument.
-          # Start-Process -ArgumentList flattens arrays and can split this preset name.
-          $exportOutput = & $godotExe --headless --path $env:GITHUB_WORKSPACE --export-debug "Windows Desktop" $exePath 2>&1
-          $exportExitCode = $LASTEXITCODE
+          # Godot's Windows build uses a GUI executable; launch it as a process
+          # and explicitly quote every argument containing spaces.
+          $argumentLine = '--headless --path "{0}" --export-debug "Windows Desktop" "{1}"' -f $env:GITHUB_WORKSPACE, $exePath
+          $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-export-stdout.txt"
+          $stderrPath = Join-Path $env:RUNNER_TEMP "godot-export-stderr.txt"
+          $process = Start-Process -FilePath $godotExe -ArgumentList $argumentLine -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
 
-          Write-Host "Godot export output:"
-          $exportOutput | ForEach-Object { Write-Host $_ }
+          Write-Host "Godot export stdout:"
+          if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
+          Write-Host "Godot export stderr:"
+          if (Test-Path $stderrPath) { Get-Content $stderrPath }
 
-          if ($exportExitCode -ne 0) {
-            throw "Godot Windows export failed with exit code $exportExitCode."
+          if ($process.ExitCode -ne 0) {
+            throw "Godot Windows export failed with exit code $($process.ExitCode). See captured output above."
           }
 
           Write-Host "Files produced in build directory:"
