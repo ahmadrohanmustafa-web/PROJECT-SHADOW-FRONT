@@ -258,7 +258,7 @@ func _toggle_pause() -> void:
 	heading.add_theme_font_size_override("font_size", 22)
 	layout.add_child(heading)
 	var resume := Button.new()
-	resume.text = "RESUME  [P]"
+	resume.text = "RESUME"
 	resume.custom_minimum_size.y = 52
 	resume.pressed.connect(_resume_game)
 	layout.add_child(resume)
