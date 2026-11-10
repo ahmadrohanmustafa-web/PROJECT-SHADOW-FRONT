@@ -22,14 +22,16 @@ The finished Windows release should be downloadable, installable, and playable w
 Godot 4.7.2 stable, standard edition, Compatibility renderer. The engine patch is pinned for the first prototype milestone.
 
 ## Current development status
-The repository now contains the first source-level playable prototype:
-- First-person mouse look
-- WASD movement
-- Sprint and jump
-- Crouch toggle and hold
-- A lightweight greybox test area with collision
+The repository now contains an expanded first-mission prototype:
+- First-person movement, sprint, jump, and crouch
+- Northstar Terminal greybox environment
+- Deployment briefing and three-stage mission objectives
+- Warehouse checkpoint
+- Lightweight squad companion Elias Rook with basic follow behaviour and check-in dialogue
+- Interactive terminal intel record and mission debrief overlay
+- Extraction rendezvous and mission completion flow
 
-**Validation status:** the prototype passed Godot 4.7.2 headless import/parse and a 120-frame main-scene startup check in GitHub Actions, including after a jump-input fix. A Windows export preset and CI artifact workflow are now committed; the first Windows export is pending. Interactive gameplay and target-laptop performance are not yet tested. There is no final installer or finished campaign build yet.
+**Validation status:** recent commits have passed Godot 4.7.2 headless import/parse and main-scene startup checks, and Windows prototype exports have succeeded. The latest terminal-interaction/debrief changes are awaiting their own CI results. Interactive gameplay and target-laptop performance are not yet tested. This remains a greybox prototype, not a finished campaign or installer.
 
 ## Project principles
 - Original fictional setting, characters, story, factions, locations, and equipment.
