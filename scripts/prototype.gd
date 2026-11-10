@@ -8,10 +8,14 @@ const WARM_METAL := Color(0.42, 0.34, 0.25)
 const PALE_METAL := Color(0.36, 0.40, 0.41)
 const ACCENT := Color(0.72, 0.48, 0.20)
 
+var mission_status_label: Label
+var mission_completed: bool = false
+
 func _ready() -> void:
 	_create_environment()
 	_create_level()
 	_create_player()
+	_create_objective_trigger()
 	_create_hud()
 
 func _create_environment() -> void:
@@ -84,6 +88,7 @@ func _create_level() -> void:
 	_add_box("Crouch passage top", Vector3(-4.0, 1.8, 5.0), Vector3(4.0, 0.35, 2.0), WARM_METAL)
 	_add_box("Crouch passage left", Vector3(-5.85, 0.9, 5.0), Vector3(0.3, 1.8, 2.0), WARM_METAL)
 	_add_box("Crouch passage right", Vector3(-2.15, 0.9, 5.0), Vector3(0.3, 1.8, 2.0), WARM_METAL)
+	_add_label("OBJECTIVE  →", Vector3(0.0, 3.0, -13.9), 24, Color(1.0, 0.76, 0.36))
 
 func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_color: Color, solid: bool = true) -> void:
 	var root: Node3D
@@ -129,19 +134,50 @@ func _create_player() -> void:
 	player.position = Vector3(0.0, 0.0, 12.0)
 	add_child(player)
 
+func _create_objective_trigger() -> void:
+	var objective_area := Area3D.new()
+	objective_area.name = "LoadingBayObjectiveTrigger"
+	objective_area.position = Vector3(0.0, 1.2, -14.0)
+	objective_area.collision_layer = 0
+	objective_area.collision_mask = 1
+
+	var trigger_shape := CollisionShape3D.new()
+	var trigger_box := BoxShape3D.new()
+	trigger_box.size = Vector3(8.0, 2.4, 2.4)
+	trigger_shape.shape = trigger_box
+	objective_area.add_child(trigger_shape)
+	objective_area.body_entered.connect(_on_objective_body_entered)
+	add_child(objective_area)
+
+func _on_objective_body_entered(body: Node3D) -> void:
+	if mission_completed or not body is ShadowFrontPlayer:
+		return
+	mission_completed = true
+	if is_instance_valid(mission_status_label):
+		mission_status_label.text = "OBJECTIVE COMPLETE  |  Loading bay reached"
+		mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+
 func _create_hud() -> void:
 	var layer := CanvasLayer.new()
 	var panel := ColorRect.new()
 	panel.position = Vector2(18.0, 18.0)
-	panel.size = Vector2(600.0, 104.0)
+	panel.size = Vector2(600.0, 132.0)
 	panel.color = Color(0.025, 0.035, 0.045, 0.78)
 	layer.add_child(panel)
 
 	var label := Label.new()
 	label.position = Vector2(14.0, 12.0)
-	label.size = Vector2(570.0, 88.0)
+	label.size = Vector2(570.0, 76.0)
 	label.text = "PROJECT: SHADOW FRONT  |  NORTHSTAR TERMINAL\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL Hold / C Toggle Crouch   Mouse Look   ESC Release Mouse"
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
+
+	mission_status_label = Label.new()
+	mission_status_label.position = Vector2(14.0, 92.0)
+	mission_status_label.size = Vector2(570.0, 26.0)
+	mission_status_label.text = "OBJECTIVE: Reach the warehouse loading bay"
+	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
+	mission_status_label.add_theme_font_size_override("font_size", 16)
+	panel.add_child(mission_status_label)
 	add_child(layer)
