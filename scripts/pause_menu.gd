@@ -9,8 +9,11 @@ var mission_manager: ShadowFrontMissionManager
 var world_environment: WorldEnvironment
 var menu_root: Control
 var sensitivity_slider: HSlider
+var fov_slider: HSlider
+var invert_y_toggle: CheckButton
 var low_detail_toggle: CheckButton
 var is_open: bool = false
+var pause_allowed: bool = true
 const SETTINGS_PATH := "user://shadow_front_settings.cfg"
 
 func _ready() -> void:
@@ -27,7 +30,14 @@ func configure(target_player: ShadowFrontPlayer, saves: ShadowFrontSaveSystem, m
 	world_environment = environment_node
 	_apply_loaded_settings()
 
+func set_pause_allowed(enabled: bool) -> void:
+	pause_allowed = enabled
+	if not enabled and is_open:
+		close_menu()
+
 func toggle_menu() -> void:
+	if not pause_allowed:
+		return
 	if is_open:
 		close_menu()
 	else:
@@ -70,8 +80,8 @@ func _build_menu() -> void:
 	shade.color = Color(0.008, 0.015, 0.022, 0.91)
 	menu_root.add_child(shade)
 	var panel := PanelContainer.new()
-	panel.position = Vector2(350.0, 105.0)
-	panel.size = Vector2(580.0, 510.0)
+	panel.position = Vector2(350.0, 50.0)
+	panel.size = Vector2(580.0, 620.0)
 	menu_root.add_child(panel)
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 18)
@@ -118,6 +128,20 @@ func _build_menu() -> void:
 	sensitivity_slider.custom_minimum_size.y = 28
 	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 	layout.add_child(sensitivity_slider)
+	var fov_label := Label.new()
+	fov_label.text = "FIELD OF VIEW"
+	layout.add_child(fov_label)
+	fov_slider = HSlider.new()
+	fov_slider.min_value = 65.0
+	fov_slider.max_value = 100.0
+	fov_slider.step = 1.0
+	fov_slider.custom_minimum_size.y = 24
+	fov_slider.value_changed.connect(_on_fov_changed)
+	layout.add_child(fov_slider)
+	invert_y_toggle = CheckButton.new()
+	invert_y_toggle.text = "INVERT MOUSE Y-AXIS"
+	invert_y_toggle.toggled.connect(_on_invert_y_changed)
+	layout.add_child(invert_y_toggle)
 	var footer := Label.new()
 	footer.text = "Settings are saved locally. Press P to return to the mission."
 	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -147,6 +171,19 @@ func _on_low_detail_changed(enabled: bool) -> void:
 		world_environment.environment.ambient_light_energy = 0.52 if enabled else 0.72
 	_save_settings()
 
+func _on_fov_changed(value: float) -> void:
+	if is_instance_valid(player):
+		player.standing_fov = value
+		player.sprint_fov = value + 5.0
+		if is_instance_valid(player.camera):
+			player.camera.fov = value
+	_save_settings()
+
+func _on_invert_y_changed(enabled: bool) -> void:
+	if is_instance_valid(player):
+		player.invert_mouse_y = enabled
+	_save_settings()
+
 func _on_sensitivity_changed(value: float) -> void:
 	if is_instance_valid(player):
 		player.mouse_sensitivity = value
@@ -156,15 +193,22 @@ func _load_settings() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) != OK:
 		sensitivity_slider.value = 0.0018
+		fov_slider.value = 75.0
 		low_detail_toggle.button_pressed = false
+		invert_y_toggle.button_pressed = false
 		return
 	sensitivity_slider.value = float(config.get_value("settings", "mouse_sensitivity", 0.0018))
+	fov_slider.value = clampf(float(config.get_value("settings", "field_of_view", 75.0)), 65.0, 100.0)
 	low_detail_toggle.button_pressed = bool(config.get_value("settings", "low_detail", false))
+	invert_y_toggle.button_pressed = bool(config.get_value("settings", "invert_mouse_y", false))
 	_apply_loaded_settings()
 
 func _apply_loaded_settings() -> void:
 	if is_instance_valid(player):
 		player.mouse_sensitivity = sensitivity_slider.value
+		player.standing_fov = fov_slider.value
+		player.sprint_fov = fov_slider.value + 5.0
+		player.invert_mouse_y = invert_y_toggle.button_pressed
 	if is_instance_valid(world_environment) and world_environment.environment != null:
 		world_environment.environment.fog_enabled = not low_detail_toggle.button_pressed
 		world_environment.environment.ambient_light_energy = 0.52 if low_detail_toggle.button_pressed else 0.72
@@ -172,10 +216,12 @@ func _apply_loaded_settings() -> void:
 func _save_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value("settings", "mouse_sensitivity", sensitivity_slider.value)
+	config.set_value("settings", "field_of_view", fov_slider.value)
+	config.set_value("settings", "invert_mouse_y", invert_y_toggle.button_pressed)
 	config.set_value("settings", "low_detail", low_detail_toggle.button_pressed)
 	config.save(SETTINGS_PATH)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P and pause_allowed:
 		toggle_menu()
 		get_viewport().set_input_as_handled()
