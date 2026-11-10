@@ -12,6 +12,7 @@ var follow_target: Node3D
 var body_mesh: MeshInstance3D
 var head_mesh: MeshInstance3D
 var dialogue_index: int = 0
+var nameplate: Label3D
 var radio_lines: Array[String] = [
 	"I'm with you. Let's bring that data home.",
 	"Keep moving. The rendezvous is back across the yard.",
@@ -62,6 +63,15 @@ func _build_character() -> void:
 	_add_box("Field pack", Vector3(0.0, 1.08, 0.27), Vector3(0.42, 0.58, 0.22), pack)
 	head_mesh = _add_sphere("Head", 0.23, Vector3(0.0, 1.72, 0.0), skin)
 	_add_box("Shoulder marker", Vector3(0.34, 1.22, -0.02), Vector3(0.12, 0.12, 0.12), vest)
+	nameplate = Label3D.new()
+	nameplate.name = "SquadNameplate"
+	nameplate.text = "ELIAS ROOK  /  COMMS"
+	nameplate.position = Vector3(0.0, 2.25, 0.0)
+	nameplate.font_size = 24
+	nameplate.modulate = Color(0.72, 0.86, 0.88)
+	nameplate.outline_size = 6
+	nameplate.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	add_child(nameplate)
 
 func _add_capsule(node_name: String, radius: float, height: float, at: Vector3, material: Material) -> MeshInstance3D:
 	var mesh_instance := MeshInstance3D.new()
