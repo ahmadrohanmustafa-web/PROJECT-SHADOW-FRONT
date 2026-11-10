@@ -19,6 +19,8 @@ func _ready() -> void:
 	_create_hud()
 	_create_mission_manager()
 	_create_objective_triggers()
+	_create_checkpoint_trigger()
+	_create_deployment_briefing()
 
 func _create_environment() -> void:
 	var world_environment := WorldEnvironment.new()
@@ -183,6 +185,126 @@ func _on_mission_objective_changed(index: int, description: String) -> void:
 func _on_mission_completed() -> void:
 	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+
+func _create_checkpoint_trigger() -> void:
+	var checkpoint_area := Area3D.new()
+	checkpoint_area.name = "WarehouseCheckpointTrigger"
+	checkpoint_area.position = Vector3(0.0, 1.0, -18.0)
+	checkpoint_area.collision_layer = 0
+	checkpoint_area.collision_mask = 1
+
+	var checkpoint_shape := CollisionShape3D.new()
+	var checkpoint_box := BoxShape3D.new()
+	checkpoint_box.size = Vector3(4.0, 2.0, 2.0)
+	checkpoint_shape.shape = checkpoint_box
+	checkpoint_area.add_child(checkpoint_shape)
+	checkpoint_area.body_entered.connect(_on_checkpoint_body_entered)
+	add_child(checkpoint_area)
+
+func _on_checkpoint_body_entered(body: Node3D) -> void:
+	if body != player:
+		return
+	var safe_position := Vector3(0.0, 0.0, -17.0)
+	if mission_manager.checkpoint_position.is_equal_approx(safe_position):
+		return
+	mission_manager.set_checkpoint(safe_position)
+	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
+	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
+
+func _create_deployment_briefing() -> void:
+	var briefing_layer := CanvasLayer.new()
+	briefing_layer.name = "DeploymentBriefing"
+	briefing_layer.layer = 10
+
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	briefing_layer.add_child(root)
+
+	var backdrop := ColorRect.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.015, 0.025, 0.035, 0.94)
+	root.add_child(backdrop)
+
+	var card := ColorRect.new()
+	card.position = Vector2(110.0, 105.0)
+	card.size = Vector2(1060.0, 510.0)
+	card.color = Color(0.055, 0.075, 0.085, 0.98)
+	root.add_child(card)
+
+	var eyebrow := Label.new()
+	eyebrow.position = Vector2(52.0, 42.0)
+	eyebrow.size = Vector2(950.0, 30.0)
+	eyebrow.text = "PROJECT: SHADOW FRONT     /     SINGLE-PLAYER CAMPAIGN"
+	eyebrow.add_theme_color_override("font_color", Color(0.65, 0.76, 0.78))
+	eyebrow.add_theme_font_size_override("font_size", 16)
+	card.add_child(eyebrow)
+
+	var title := Label.new()
+	title.position = Vector2(52.0, 90.0)
+	title.size = Vector2(950.0, 62.0)
+	title.text = "NORTHSTAR: FIRST CONTACT"
+	title.add_theme_color_override("font_color", Color(0.94, 0.91, 0.82))
+	title.add_theme_font_size_override("font_size", 34)
+	card.add_child(title)
+
+	var divider := ColorRect.new()
+	divider.position = Vector2(52.0, 166.0)
+	divider.size = Vector2(950.0, 2.0)
+	divider.color = Color(0.66, 0.48, 0.27)
+	card.add_child(divider)
+
+	var briefing := Label.new()
+	briefing.position = Vector2(52.0, 198.0)
+	briefing.size = Vector2(950.0, 112.0)
+	briefing.text = "Northstar Terminal has gone silent. The last transmission ended before the night shift could confirm what happened. Your assignment is to enter the terminal, reach the warehouse, and recover the data left at its central console.\n\nThis is a solo reconnaissance assignment. Stay alert and follow the marked route."
+	briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	briefing.add_theme_color_override("font_color", Color(0.80, 0.85, 0.86))
+	briefing.add_theme_font_size_override("font_size", 18)
+	card.add_child(briefing)
+
+	var objective_heading := Label.new()
+	objective_heading.position = Vector2(52.0, 335.0)
+	objective_heading.size = Vector2(950.0, 28.0)
+	objective_heading.text = "MISSION OBJECTIVES"
+	objective_heading.add_theme_color_override("font_color", Color(0.91, 0.70, 0.40))
+	objective_heading.add_theme_font_size_override("font_size", 16)
+	card.add_child(objective_heading)
+
+	var objectives := Label.new()
+	objectives.position = Vector2(52.0, 372.0)
+	objectives.size = Vector2(950.0, 60.0)
+	objectives.text = "01   Reach the warehouse loading bay\n02   Recover the data from the terminal"
+	objectives.add_theme_color_override("font_color", Color(0.90, 0.92, 0.91))
+	objectives.add_theme_font_size_override("font_size", 18)
+	card.add_child(objectives)
+
+	var deploy_prompt := Label.new()
+	deploy_prompt.position = Vector2(52.0, 455.0)
+	deploy_prompt.size = Vector2(950.0, 30.0)
+	deploy_prompt.text = "PRESS ENTER TO DEPLOY"
+	deploy_prompt.add_theme_color_override("font_color", Color(1.0, 0.78, 0.43))
+	deploy_prompt.add_theme_font_size_override("font_size", 18)
+	card.add_child(deploy_prompt)
+
+	add_child(briefing_layer)
+	player.set_physics_process(false)
+	player.mouse_captured = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	set_meta("deployment_briefing_layer", briefing_layer)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not has_meta("deployment_briefing_layer"):
+		return
+	var briefing_layer := get_meta("deployment_briefing_layer") as CanvasLayer
+	if briefing_layer == null or not is_instance_valid(briefing_layer):
+		return
+	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
+		briefing_layer.queue_free()
+		remove_meta("deployment_briefing_layer")
+		player.set_physics_process(true)
+		player.mouse_captured = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		get_viewport().set_input_as_handled()
 
 func _physics_process(_delta: float) -> void:
 	if is_instance_valid(player) and player.global_position.y < -5.0:
