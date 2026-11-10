@@ -11,6 +11,17 @@ class_name ShadowFrontCompanion
 var follow_target: Node3D
 var body_mesh: MeshInstance3D
 var head_mesh: MeshInstance3D
+var dialogue_index: int = 0
+var radio_lines: Array[String] = [
+	"I'm with you. Let's bring that data home.",
+	"Keep moving. The rendezvous is back across the yard.",
+	"Terminal is behind us. Stay close until we're clear."
+]
+
+func get_radio_line() -> String:
+	var line := radio_lines[dialogue_index % radio_lines.size()]
+	dialogue_index += 1
+	return line
 
 func _ready() -> void:
 	_build_character()
