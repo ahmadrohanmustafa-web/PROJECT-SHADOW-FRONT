@@ -35,7 +35,8 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 ## Phase 3 — Campaign production
 - [ ] Lock story bible and mission beat sheets.
 - [ ] Build reusable mission, dialogue, cinematic, save, and companion systems; local save/settings foundations are implemented.
-- [x] Produce the first playable blockout of Mission 02 with four objectives, Nadia check-in, dispatch evidence interaction, and debrief.\n- [ ] Produce remaining campaign missions in small, testable increments.
+- [x] Produce the first playable blockout of Mission 02 with four objectives, Nadia check-in, dispatch evidence interaction, and debrief.
+- [x] Persist Mission 02 objective progress and completion in the shared campaign save; manual runtime verification remains pending.\n- [ ] Produce remaining campaign missions in small, testable increments.
 - [ ] Track narrative continuity and asset provenance.
 - [ ] Playtest every mission and the full campaign.
 
