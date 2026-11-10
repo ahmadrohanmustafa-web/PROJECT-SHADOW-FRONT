@@ -22,6 +22,7 @@ var gravity: float = float(ProjectSettings.get_setting("physics/3d/default_gravi
 var is_crouching: bool = false
 var crouch_toggled: bool = false
 var mouse_captured: bool = true
+var invert_mouse_y: bool = false
 var standing_capsule_height: float = 1.8
 var crouching_capsule_height: float = 1.2
 var standing_head_height: float = 1.55
@@ -35,7 +36,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and mouse_captured:
 		rotate_y(-event.relative.x * mouse_sensitivity)
-		head.rotate_x(-event.relative.y * mouse_sensitivity)
+		head.rotate_x(event.relative.y * mouse_sensitivity if invert_mouse_y else -event.relative.y * mouse_sensitivity)
 		head.rotation.x = clampf(head.rotation.x, deg_to_rad(-85.0), deg_to_rad(85.0))
 
 	if event is InputEventKey and event.pressed and not event.echo:
