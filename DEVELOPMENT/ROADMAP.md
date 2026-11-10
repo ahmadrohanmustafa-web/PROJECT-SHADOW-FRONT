@@ -16,6 +16,7 @@ Storage budget: approximately 15 GB desired; 20 GB absolute ceiling. Do not infl
 
 ## Phase 1 — Playable technical prototype
 - [x] Create a reproducible Godot Windows project.
+- [x] Add a campaign front end with Continue, New Campaign, save detection, and mission availability.
 - [x] Implement first-person movement, camera, and input actions.
 - [ ] Add remappable controls; mouse sensitivity, field of view, invert-Y, and low-detail settings are configurable and saved locally.
 - [x] Create a small greybox test environment.
