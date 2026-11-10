@@ -9,14 +9,16 @@ const PALE_METAL := Color(0.36, 0.40, 0.41)
 const ACCENT := Color(0.72, 0.48, 0.20)
 
 var mission_status_label: Label
-var mission_completed: bool = false
+var player: ShadowFrontPlayer
+var mission_manager: ShadowFrontMissionManager
 
 func _ready() -> void:
 	_create_environment()
 	_create_level()
 	_create_player()
-	_create_objective_trigger()
 	_create_hud()
+	_create_mission_manager()
+	_create_objective_triggers()
 
 func _create_environment() -> void:
 	var world_environment := WorldEnvironment.new()
@@ -89,6 +91,9 @@ func _create_level() -> void:
 	_add_box("Crouch passage left", Vector3(-5.85, 0.9, 5.0), Vector3(0.3, 1.8, 2.0), WARM_METAL)
 	_add_box("Crouch passage right", Vector3(-2.15, 0.9, 5.0), Vector3(0.3, 1.8, 2.0), WARM_METAL)
 	_add_label("OBJECTIVE  →", Vector3(0.0, 3.0, -13.9), 24, Color(1.0, 0.76, 0.36))
+	_add_box("Data terminal pedestal", Vector3(0.0, 0.55, -24.0), Vector3(1.5, 1.1, 0.9), DARK_CONCRETE)
+	_add_box("Data terminal screen", Vector3(0.0, 1.35, -24.35), Vector3(1.1, 0.55, 0.12), Color(0.18, 0.34, 0.34))
+	_add_label("DATA TERMINAL", Vector3(0.0, 2.5, -23.2), 18, Color(0.55, 0.85, 0.82))
 
 func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_color: Color, solid: bool = true) -> void:
 	var root: Node3D
@@ -130,32 +135,59 @@ func _add_label(label_text: String, label_position: Vector3, font_size: int, lab
 	add_child(label)
 
 func _create_player() -> void:
-	var player: CharacterBody3D = PLAYER_SCENE.instantiate() as CharacterBody3D
+	player = PLAYER_SCENE.instantiate() as ShadowFrontPlayer
 	player.position = Vector3(0.0, 0.0, 12.0)
 	add_child(player)
 
-func _create_objective_trigger() -> void:
+func _create_mission_manager() -> void:
+	mission_manager = ShadowFrontMissionManager.new()
+	mission_manager.name = "MissionManager"
+	mission_manager.objective_changed.connect(_on_mission_objective_changed)
+	mission_manager.mission_completed.connect(_on_mission_completed)
+	add_child(mission_manager)
+	mission_manager.start_mission([
+		"Reach the warehouse loading bay",
+		"Reach the data terminal inside the warehouse"
+	], player.global_position)
+
+func _create_objective_triggers() -> void:
+	_add_objective_trigger("LoadingBayObjectiveTrigger", Vector3(0.0, 1.2, -14.0), 0)
+	_add_objective_trigger("DataTerminalObjectiveTrigger", Vector3(0.0, 1.2, -24.0), 1)
+
+func _add_objective_trigger(trigger_name: String, trigger_position: Vector3, objective_index: int) -> void:
 	var objective_area := Area3D.new()
-	objective_area.name = "LoadingBayObjectiveTrigger"
-	objective_area.position = Vector3(0.0, 1.2, -14.0)
+	objective_area.name = trigger_name
+	objective_area.position = trigger_position
 	objective_area.collision_layer = 0
 	objective_area.collision_mask = 1
 
 	var trigger_shape := CollisionShape3D.new()
 	var trigger_box := BoxShape3D.new()
-	trigger_box.size = Vector3(8.0, 2.4, 2.4)
+	trigger_box.size = Vector3(5.0, 2.4, 2.4)
 	trigger_shape.shape = trigger_box
 	objective_area.add_child(trigger_shape)
-	objective_area.body_entered.connect(_on_objective_body_entered)
+	objective_area.body_entered.connect(_on_objective_body_entered.bind(objective_index))
 	add_child(objective_area)
 
-func _on_objective_body_entered(body: Node3D) -> void:
-	if mission_completed or not body is ShadowFrontPlayer:
+func _on_objective_body_entered(body: Node3D, objective_index: int) -> void:
+	if body != player or mission_manager.is_complete:
 		return
-	mission_completed = true
-	if is_instance_valid(mission_status_label):
-		mission_status_label.text = "OBJECTIVE COMPLETE  |  Loading bay reached"
-		mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+	if objective_index != mission_manager.current_objective_index:
+		return
+	mission_manager.complete_current_objective()
+
+func _on_mission_objective_changed(index: int, description: String) -> void:
+	mission_status_label.text = "%s  |  %s" % [mission_manager.get_objective_counter(), description]
+	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
+
+func _on_mission_completed() -> void:
+	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
+	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
+
+func _physics_process(_delta: float) -> void:
+	if is_instance_valid(player) and player.global_position.y < -5.0:
+		player.global_position = mission_manager.checkpoint_position
+		player.velocity = Vector3.ZERO
 
 func _create_hud() -> void:
 	var layer := CanvasLayer.new()
