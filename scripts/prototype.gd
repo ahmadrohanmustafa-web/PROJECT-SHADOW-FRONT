@@ -268,7 +268,7 @@ func _create_companion() -> void:
 	companion = ShadowFrontCompanion.new()
 	companion.name = "SquadCompanion"
 	companion.follow_target = player
-	companion.position = Vector3(2.0, 0.0, 13.0)
+	companion.position = player.global_position + Vector3(2.0, 0.0, 1.0)
 	companion.set_process(false)
 	add_child(companion)
 
@@ -500,10 +500,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			if is_instance_valid(briefing_layer):
 				briefing_layer.queue_free()
 			remove_meta("deployment_briefing_layer")
-			player.set_physics_process(true)
-			companion.set_process(true)
-			player.mouse_captured = true
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			if saved_mission_complete:
+				_show_mission_complete_screen()
+			else:
+				player.set_physics_process(true)
+				companion.set_process(true)
+				player.mouse_captured = true
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 			get_viewport().set_input_as_handled()
 		return
 	if has_meta("intel_overlay_layer"):
