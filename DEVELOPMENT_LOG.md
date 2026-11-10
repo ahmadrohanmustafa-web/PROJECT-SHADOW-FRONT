@@ -24,3 +24,10 @@ Complete and inspect the first Windows export artifact, then arrange a real inte
 - Kept settings within the lightweight Compatibility-renderer prototype.
 - Previous restart/save update passed Godot headless validation and Windows export; this controls batch is awaiting CI.
 - Interactive gameplay and target-laptop testing remain outstanding.
+
+
+## 2026-11-10 — Campaign front end
+- Added a title/menu scene as the Windows project entry point.
+- Added Continue and New Campaign flows, including local save detection and safe reset of the Northstar save section without touching player settings.
+- Kept the first mission as the available playable campaign entry; the front end does not imply later missions are playable.
+- Automated validation and Windows export queued by the code changes. Interactive menu testing remains outstanding.
