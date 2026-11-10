@@ -13,6 +13,8 @@ var briefing_layer: CanvasLayer
 var debrief_layer: CanvasLayer
 var objective_index: int = 0
 var interaction_cooldown: bool = false
+var pause_layer: CanvasLayer
+var is_paused: bool = false
 
 const OBJECTIVES: Array[String] = [
 	"Reach the Larkspur clinic entrance",
@@ -216,8 +218,71 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 		get_viewport().set_input_as_handled()
 		return
+	if event.keycode == KEY_P:
+		_toggle_pause()
+		get_viewport().set_input_as_handled()
+		return
 	if event.keycode == KEY_E:
 		_handle_interaction()
+
+func _toggle_pause() -> void:
+	if is_instance_valid(briefing_layer) or is_instance_valid(debrief_layer):
+		return
+	if is_paused:
+		_resume_game()
+		return
+	is_paused = true
+	get_tree().paused = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	pause_layer = CanvasLayer.new()
+	pause_layer.name = "MissionPause"
+	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_layer.layer = 30
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_layer.add_child(root)
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.008, 0.015, 0.022, 0.92)
+	root.add_child(shade)
+	var panel := PanelContainer.new()
+	panel.position = Vector2(390, 190)
+	panel.size = Vector2(500, 340)
+	root.add_child(panel)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 18)
+	panel.add_child(layout)
+	var heading := Label.new()
+	heading.text = "FIELD MENU  /  THE QUIET DISTRICT"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 22)
+	layout.add_child(heading)
+	var resume := Button.new()
+	resume.text = "RESUME  [P]"
+	resume.custom_minimum_size.y = 52
+	resume.pressed.connect(_resume_game)
+	layout.add_child(resume)
+	var menu := Button.new()
+	menu.text = "RETURN TO CAMPAIGN MENU"
+	menu.custom_minimum_size.y = 48
+	menu.pressed.connect(_return_to_menu)
+	layout.add_child(menu)
+	add_child(pause_layer)
+
+func _resume_game() -> void:
+	if not is_paused:
+		return
+	is_paused = false
+	get_tree().paused = false
+	if is_instance_valid(pause_layer):
+		pause_layer.queue_free()
+	pause_layer = null
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _return_to_menu() -> void:
+	get_tree().paused = false
+	is_paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(briefing_layer) or is_instance_valid(debrief_layer):
