@@ -22,7 +22,6 @@ func _ready() -> void:
 	_create_objective_triggers()
 	_create_checkpoint_trigger()
 	_create_companion()
-	_create_extraction_zone()
 	_create_deployment_briefing()
 
 func _create_environment() -> void:
@@ -228,32 +227,12 @@ func _create_companion() -> void:
 	companion.set_process(false)
 	add_child(companion)
 
-func _create_extraction_zone() -> void:
-	var extraction_area := Area3D.new()
-	extraction_area.name = "ExtractionRendezvous"
-	extraction_area.position = Vector3(0.0, 1.0, 17.0)
-	extraction_area.collision_layer = 0
-	extraction_area.collision_mask = 1
-	var extraction_shape := CollisionShape3D.new()
-	var extraction_box := BoxShape3D.new()
-	extraction_box.size = Vector3(5.0, 2.0, 4.0)
-	extraction_shape.shape = extraction_box
-	extraction_area.add_child(extraction_shape)
-	extraction_area.body_entered.connect(_on_extraction_body_entered)
-	add_child(extraction_area)
-
-func _on_extraction_body_entered(body: Node3D) -> void:
-	if body != player or mission_manager.is_complete:
-		return
-	if mission_manager.current_objective_index == 2:
-		mission_manager.complete_current_objective()
-
 func _on_companion_interaction() -> void:
 	if not is_instance_valid(companion) or not is_instance_valid(player):
 		return
 	if companion.global_position.distance_to(player.global_position) > 3.5:
 		return
-	mission_status_label.text = "SQUAD LINK  |  I'm with you. Let's bring that data home."
+	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line()
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
 
 func _create_deployment_briefing() -> void:
@@ -339,7 +318,8 @@ func _create_deployment_briefing() -> void:
 	set_meta("deployment_briefing_layer", briefing_layer)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E and not has_meta("deployment_briefing_layer"):
+		_on_companion_interaction()
 		_on_companion_interaction()
 	if not has_meta("deployment_briefing_layer"):
 		return
@@ -370,8 +350,8 @@ func _create_hud() -> void:
 
 	var label := Label.new()
 	label.position = Vector2(14.0, 12.0)
-	label.size = Vector2(570.0, 76.0)
-	label.text = "PROJECT: SHADOW FRONT  |  NORTHSTAR TERMINAL\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL Hold / C Toggle Crouch   Mouse Look   ESC Release Mouse"
+	label.size = Vector2(570.0, 80.0)
+	label.text = "PROJECT: SHADOW FRONT  |  NORTHSTAR TERMINAL\nWASD Move   SHIFT Sprint   SPACE Jump\nCTRL / C Crouch   E Squad Check-in\nMouse Look   ESC Release Mouse"
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
