@@ -1,6 +1,8 @@
 extends CanvasLayer
 class_name ShadowFrontPauseMenu
 
+signal restart_requested
+
 var player: ShadowFrontPlayer
 var save_system: ShadowFrontSaveSystem
 var mission_manager: ShadowFrontMissionManager
@@ -88,6 +90,11 @@ func _build_menu() -> void:
 	resume.custom_minimum_size.y = 48
 	resume.pressed.connect(close_menu)
 	layout.add_child(resume)
+	var restart := Button.new()
+	restart.text = "RESTART MISSION"
+	restart.custom_minimum_size.y = 42
+	restart.pressed.connect(_confirm_restart)
+	layout.add_child(restart)
 	var save := Button.new()
 	save.text = "SAVE CURRENT PROGRESS"
 	save.custom_minimum_size.y = 42
@@ -116,6 +123,19 @@ func _build_menu() -> void:
 	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(footer)
+
+func _confirm_restart() -> void:
+	var confirmation := ConfirmationDialog.new()
+	confirmation.title = "RESTART NORTHSTAR?"
+	confirmation.dialog_text = "Current mission progress will be cleared. Restart from the beginning?"
+	confirmation.ok_button_text = "RESTART"
+	add_child(confirmation)
+	confirmation.confirmed.connect(func() -> void:
+		restart_requested.emit()
+		confirmation.queue_free()
+	)
+	confirmation.canceled.connect(confirmation.queue_free)
+	confirmation.popup_centered(Vector2i(480, 180))
 
 func _save_now() -> void:
 	if is_instance_valid(save_system) and is_instance_valid(mission_manager):
