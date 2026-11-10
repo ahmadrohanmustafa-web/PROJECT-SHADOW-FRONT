@@ -330,7 +330,7 @@ func _open_terminal_intel() -> void:
 	var evidence := Label.new()
 	evidence.position = Vector2(48.0, 190.0)
 	evidence.size = Vector2(930.0, 210.0)
-	evidence.text = "LOCAL SYSTEM RECORD  /  02:14\\n\\nThe terminal log confirms that the emergency broadcast was authenticated after the Northstar relief convoy had already checked in safely. The public alert described the convoy as missing.\\n\\nA second entry references an external relay tagged VEYRA-7. The sender identity has been removed from this copy.\\n\\nElias: \\"That timestamp is wrong. Someone wanted the alert to look like it came first.\\""
+	evidence.text = "LOCAL SYSTEM RECORD  /  02:14\n\nThe terminal log confirms that the emergency broadcast was authenticated after the Northstar relief convoy had already checked in safely. The public alert described the convoy as missing.\n\nA second entry references an external relay tagged VEYRA-7. The sender identity has been removed from this copy.\n\nElias: \"That timestamp is wrong. Someone wanted the alert to look like it came first.\""
 	evidence.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	evidence.add_theme_color_override("font_color", Color(0.82, 0.88, 0.86))
 	evidence.add_theme_font_size_override("font_size", 18)
@@ -402,7 +402,7 @@ func _show_mission_complete_screen() -> void:
 	var summary := Label.new()
 	summary.position = Vector2(52.0, 190.0)
 	summary.size = Vector2(870.0, 140.0)
-	summary.text = "NORTHSTAR: FIRST CONTACT\\n\\nThe terminal data is secured. The squad reached the rendezvous, but the recovered timestamp raises a new question: who sent the false alert, and why?"
+	summary.text = "NORTHSTAR: FIRST CONTACT\n\nThe terminal data is secured. The squad reached the rendezvous, but the recovered timestamp raises a new question: who sent the false alert, and why?"
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	summary.add_theme_color_override("font_color", Color(0.82, 0.87, 0.87))
 	summary.add_theme_font_size_override("font_size", 19)
