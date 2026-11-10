@@ -52,3 +52,10 @@ Complete and inspect the first Windows export artifact, then arrange a real inte
 - Mission 02 restores its last completed objective, saves after each objective transition, and records mission completion.
 - The Mission 02 menu entry indicates available, resume, or completed state after Northstar unlocks it; New Campaign clears both mission progress sections while preserving unrelated settings.
 - CI launch validation and Windows export are required before this batch is considered automated-tested. Interactive save/restore testing remains outstanding.
+
+## 2026-11-10 — Mission 03 playable blockout and campaign progression
+- Added Mission 03, **Paper Trails**, as a standalone five-objective investigation in a compact Larkspur records district.
+- Added archivist, ledger comparison, witness statement, optional community notice, squad dialogue, briefing, debrief, pause menu, and objective persistence.
+- Expanded campaign menu to unlock Mission 03 only after Mission 02 completion and to resume the latest incomplete mission through Continue.
+- New Campaign now clears all three mission progress sections while preserving settings.
+- Added Mission 03 headless launch to the Godot validation workflow. Windows export and CI validation must pass before this batch is marked automated-tested; manual gameplay and target-laptop performance tests remain outstanding.
