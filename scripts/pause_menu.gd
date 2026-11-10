@@ -23,6 +23,7 @@ func configure(target_player: ShadowFrontPlayer, saves: ShadowFrontSaveSystem, m
 	save_system = saves
 	mission_manager = mission
 	world_environment = environment_node
+	_apply_loaded_settings()
 
 func toggle_menu() -> void:
 	if is_open:
