@@ -33,12 +33,20 @@ jobs:
       - name: Verify engine version
         shell: pwsh
         run: |
-          $godotCommand = Get-Command godot -ErrorAction Stop
-          Write-Host "Godot command: $($godotCommand.Source)"
-          & $godotCommand.Source --version
-          $versionExit = $LASTEXITCODE
-          if ($versionExit -ne 0) {
-            throw "Godot version check failed with exit code $versionExit."
+          $godotExe = Join-Path $env:USERPROFILE "godot\Godot_v4.7.2-stable_win64.exe"
+          if (!(Test-Path -LiteralPath $godotExe -PathType Leaf)) {
+            throw "Godot executable not found at expected setup path: $godotExe"
+          }
+
+          $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-version-stdout.txt"
+          $stderrPath = Join-Path $env:RUNNER_TEMP "godot-version-stderr.txt"
+          Write-Host "Using Godot executable: $godotExe"
+          $process = Start-Process -FilePath $godotExe -ArgumentList @("--version") -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+
+          if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
+          if (Test-Path $stderrPath) { Get-Content $stderrPath }
+          if ($process.ExitCode -ne 0) {
+            throw "Godot version check failed with exit code $($process.ExitCode)."
           }
 
       - name: Export Windows build and verify output
@@ -49,10 +57,13 @@ jobs:
           $exePath = Join-Path $buildDir "PROJECT_SHADOW_FRONT_Prototype.exe"
           $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-export-stdout.txt"
           $stderrPath = Join-Path $env:RUNNER_TEMP "godot-export-stderr.txt"
+          $godotExe = Join-Path $env:USERPROFILE "godot\Godot_v4.7.2-stable_win64.exe"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 
-          $godotCommand = Get-Command godot -ErrorAction Stop
-          $godotExe = $godotCommand.Source
+          if (!(Test-Path -LiteralPath $godotExe -PathType Leaf)) {
+            throw "Godot executable not found at expected setup path: $godotExe"
+          }
+
           Write-Host "Using Godot executable: $godotExe"
           Write-Host "Export destination: $exePath"
 
