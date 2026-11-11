@@ -21,6 +21,8 @@ var squad_dialogue_label: Label
 var squad_dialogue_time_remaining: float = 0.0
 var mission_event_label: Label
 var mission_event_time_remaining: float = 0.0
+var navigation_label: Label
+var navigation_refresh_time: float = 0.0
 
 func _ready() -> void:
 	_create_environment()
@@ -620,6 +622,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_update_interaction_feedback()
+	navigation_refresh_time -= delta
+	if navigation_refresh_time <= 0.0:
+		navigation_refresh_time = 0.15
+		_update_navigation_feedback()
 	if mission_event_time_remaining > 0.0:
 		mission_event_time_remaining = maxf(0.0, mission_event_time_remaining - delta)
 		if mission_event_time_remaining <= 0.0 and is_instance_valid(mission_event_label):
@@ -628,6 +634,31 @@ func _process(delta: float) -> void:
 		squad_dialogue_time_remaining = maxf(0.0, squad_dialogue_time_remaining - delta)
 		if squad_dialogue_time_remaining <= 0.0 and is_instance_valid(squad_dialogue_label):
 			squad_dialogue_label.visible = false
+
+func _update_navigation_feedback() -> void:
+	if not is_instance_valid(navigation_label) or not is_instance_valid(player) or not is_instance_valid(mission_manager):
+		return
+	if mission_manager.is_complete or has_meta("deployment_briefing_layer") or has_meta("mission_complete_layer"):
+		navigation_label.visible = false
+		return
+	var targets: Array[Vector3] = [
+		Vector3(0.0, 0.0, -14.0),
+		Vector3(0.0, 0.0, -24.0),
+		Vector3(0.0, 0.0, 17.0)
+	]
+	var index := clampi(mission_manager.current_objective_index, 0, targets.size() - 1)
+	var offset := targets[index] - player.global_position
+	var distance := offset.length()
+	var local_direction := player.global_transform.basis.inverse() * offset.normalized()
+	var direction_text := "AHEAD"
+	if local_direction.z > 0.45:
+		direction_text = "BEHIND"
+	elif local_direction.x < -0.35:
+		direction_text = "LEFT"
+	elif local_direction.x > 0.35:
+		direction_text = "RIGHT"
+	navigation_label.text = "OBJECTIVE  %dm   /   %s" % [roundi(distance), direction_text]
+	navigation_label.visible = true
 
 func _show_mission_event(heading: String, detail: String, duration: float) -> void:
 	if not is_instance_valid(mission_event_label):
@@ -670,6 +701,20 @@ func _create_hud() -> void:
 	label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.96))
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
+
+	navigation_label = Label.new()
+	navigation_label.name = "ObjectiveNavigation"
+	navigation_label.anchor_left = 0.68
+	navigation_label.anchor_right = 0.98
+	navigation_label.anchor_top = 0.035
+	navigation_label.anchor_bottom = 0.095
+	navigation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	navigation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	navigation_label.add_theme_font_size_override("font_size", 17)
+	navigation_label.add_theme_color_override("font_color", Color(0.88, 0.91, 0.86))
+	navigation_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	navigation_label.add_theme_constant_override("outline_size", 5)
+	layer.add_child(navigation_label)
 
 	mission_status_label = Label.new()
 	mission_status_label.position = Vector2(14.0, 92.0)
