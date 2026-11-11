@@ -19,6 +19,8 @@ var pause_menu: ShadowFrontPauseMenu
 var interaction_prompt_label: Label
 var squad_dialogue_label: Label
 var squad_dialogue_time_remaining: float = 0.0
+var mission_event_label: Label
+var mission_event_time_remaining: float = 0.0
 
 func _ready() -> void:
 	_create_environment()
@@ -295,11 +297,13 @@ func _on_objective_body_entered(body: Node3D, objective_index: int) -> void:
 func _on_mission_objective_changed(index: int, description: String) -> void:
 	mission_status_label.text = "%s  |  %s" % [mission_manager.get_objective_counter(), description]
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
+	_show_mission_event("OBJECTIVE UPDATED", description, 3.2)
 
 func _on_mission_completed() -> void:
 	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
 	_save_current_progress()
+	_show_mission_event("MISSION COMPLETE", "Northstar Terminal secured", 4.0)
 	_show_mission_complete_screen()
 
 func _create_checkpoint_trigger() -> void:
@@ -327,6 +331,7 @@ func _on_checkpoint_body_entered(body: Node3D) -> void:
 	_save_current_progress()
 	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
+	_show_mission_event("CHECKPOINT SAVED", "Warehouse entrance", 3.0)
 
 func _create_pause_menu() -> void:
 	pause_menu = ShadowFrontPauseMenu.new()
@@ -358,6 +363,7 @@ func _on_companion_interaction() -> void:
 	if companion.global_position.distance_to(player.global_position) > 3.5:
 		return
 	var radio_line := companion.get_radio_line(mission_manager.current_objective_index)
+	companion.play_radio_acknowledgement()
 	mission_status_label.text = "SQUAD LINK  |  " + radio_line
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
 	if is_instance_valid(squad_dialogue_label):
@@ -614,10 +620,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_update_interaction_feedback()
+	if mission_event_time_remaining > 0.0:
+		mission_event_time_remaining = maxf(0.0, mission_event_time_remaining - delta)
+		if mission_event_time_remaining <= 0.0 and is_instance_valid(mission_event_label):
+			mission_event_label.visible = false
 	if squad_dialogue_time_remaining > 0.0:
 		squad_dialogue_time_remaining = maxf(0.0, squad_dialogue_time_remaining - delta)
 		if squad_dialogue_time_remaining <= 0.0 and is_instance_valid(squad_dialogue_label):
 			squad_dialogue_label.visible = false
+
+func _show_mission_event(heading: String, detail: String, duration: float) -> void:
+	if not is_instance_valid(mission_event_label):
+		return
+	mission_event_label.text = heading + "  /  " + detail
+	mission_event_label.visible = true
+	mission_event_time_remaining = duration
 
 func _update_interaction_feedback() -> void:
 	if not is_instance_valid(interaction_prompt_label) or not is_instance_valid(player):
@@ -661,6 +678,22 @@ func _create_hud() -> void:
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
 	mission_status_label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(mission_status_label)
+
+	mission_event_label = Label.new()
+	mission_event_label.name = "MissionEventFeedback"
+	mission_event_label.anchor_left = 0.18
+	mission_event_label.anchor_right = 0.82
+	mission_event_label.anchor_top = 0.105
+	mission_event_label.anchor_bottom = 0.18
+	mission_event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_event_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mission_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mission_event_label.add_theme_font_size_override("font_size", 22)
+	mission_event_label.add_theme_color_override("font_color", Color(0.91, 0.88, 0.76))
+	mission_event_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	mission_event_label.add_theme_constant_override("outline_size", 5)
+	mission_event_label.visible = false
+	layer.add_child(mission_event_label)
 
 	interaction_prompt_label = Label.new()
 	interaction_prompt_label.name = "InteractionPrompt"
