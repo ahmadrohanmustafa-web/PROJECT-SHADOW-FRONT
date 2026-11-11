@@ -16,6 +16,14 @@ var save_system: ShadowFrontSaveSystem
 var saved_mission_complete: bool = false
 var world_environment_node: WorldEnvironment
 var pause_menu: ShadowFrontPauseMenu
+var interaction_prompt_label: Label
+var squad_dialogue_label: Label
+var squad_dialogue_time_remaining: float = 0.0
+var mission_event_label: Label
+var mission_event_time_remaining: float = 0.0
+var navigation_label: Label
+var objective_tracker_label: Label
+var navigation_refresh_time: float = 0.0
 
 func _ready() -> void:
 	_create_environment()
@@ -109,6 +117,73 @@ func _create_level() -> void:
 	_add_box("Extraction beacon mast", Vector3(0.0, 2.2, 17.0), Vector3(0.18, 4.1, 0.18), ACCENT, false)
 	_add_box("Extraction beacon crossbar", Vector3(0.0, 4.1, 17.0), Vector3(1.5, 0.12, 0.12), ACCENT, false)
 	_add_label("EXTRACTION  /  RENDEZVOUS", Vector3(0.0, 4.8, 16.0), 20, Color(1.0, 0.76, 0.36))
+	_create_level_detail_pass()
+
+func _create_level_detail_pass() -> void:
+	# Warehouse facade: recessed-looking bays, narrow windows, service conduits,
+	# dock bumpers and roof edging add depth without adding dynamic lights.
+	for bay_x in [-3.2, 3.2]:
+		_add_box("Loading bay inner shadow", Vector3(bay_x, 2.0, -15.48), Vector3(2.5, 3.6, 0.08), DARK_CONCRETE, false)
+		_add_box("Loading bay door panel", Vector3(bay_x, 2.05, -15.40), Vector3(2.15, 3.25, 0.06), Color(0.18, 0.22, 0.23), false)
+		for rib_y in range(7):
+			_add_box("Loading door horizontal rib", Vector3(bay_x, 0.65 + rib_y * 0.43, -15.34), Vector3(2.12, 0.035, 0.035), PALE_METAL, false)
+		_add_box("Dock rubber bumper", Vector3(bay_x - 1.2, 0.55, -15.15), Vector3(0.18, 0.75, 0.22), DARK_CONCRETE, false)
+		_add_box("Dock rubber bumper", Vector3(bay_x + 1.2, 0.55, -15.15), Vector3(0.18, 0.75, 0.22), DARK_CONCRETE, false)
+
+	for window_x in [-16.0, -13.0, -10.0, 10.0, 13.0, 16.0]:
+		_add_box("Warehouse high window", Vector3(window_x, 4.35, -15.91), Vector3(1.65, 0.72, 0.045), Color(0.12, 0.20, 0.22), false)
+		_add_box("Warehouse window sill", Vector3(window_x, 3.96, -15.86), Vector3(1.78, 0.08, 0.12), WARM_METAL, false)
+		_add_box("Window vertical divider", Vector3(window_x, 4.35, -15.82), Vector3(0.055, 0.72, 0.06), PALE_METAL, false)
+
+	# Exposed utility lines and cable trays make the service building readable.
+	for pipe_y in [2.45, 2.72, 2.99]:
+		_add_box("Service wall utility pipe", Vector3(10.43, pipe_y, 1.0), Vector3(0.08, 0.08, 6.7), PALE_METAL, false)
+	_add_box("Service cable tray", Vector3(14.0, 3.15, -3.12), Vector3(6.5, 0.12, 0.12), DARK_CONCRETE, false)
+	_add_box("Service door frame", Vector3(10.34, 1.12, -3.12), Vector3(1.62, 2.34, 0.10), PALE_METAL, false)
+	_add_box("Service door handle", Vector3(10.12, 1.15, -3.20), Vector3(0.045, 0.24, 0.045), ACCENT, false)
+	_add_label("MAINTENANCE  /  AUTHORIZED STAFF", Vector3(14.0, 2.65, -3.25), 11, Color(0.78, 0.82, 0.77))
+
+	# Container corner castings and vertical ribs; visual-only to keep collision
+	# complexity unchanged from the existing playable blockout.
+	for z_offset in [-1.42, 1.42]:
+		for x_offset in [-2.42, 2.42]:
+			_add_box("Container corner casting", Vector3(-12.0 + x_offset, 1.25, -5.0 + z_offset), Vector3(0.16, 2.48, 0.16), PALE_METAL, false)
+			_add_box("Container corner casting", Vector3(-12.0 + x_offset, 3.85, -5.0 + z_offset), Vector3(0.16, 2.48, 0.16), PALE_METAL, false)
+	for rib_x in range(1, 9):
+		var x_pos := -14.25 + rib_x * 0.56
+		_add_box("Container corrugation", Vector3(x_pos, 1.25, -3.46), Vector3(0.045, 2.35, 0.055), PALE_METAL, false)
+		_add_box("Container corrugation", Vector3(x_pos, 3.85, -3.46), Vector3(0.045, 2.35, 0.055), PALE_METAL, false)
+	_add_label("NSTR  /  04", Vector3(-12.0, 2.0, -3.34), 15, Color(0.82, 0.84, 0.76))
+
+	# Yard safety details: bollards, drain grates, wheel stops and painted edges.
+	for bollard_x in [-5.0, 5.0]:
+		for bollard_z in [-13.0, -10.0]:
+			_add_box("Safety bollard base", Vector3(bollard_x, 0.12, bollard_z), Vector3(0.48, 0.24, 0.48), DARK_CONCRETE, false)
+			_add_box("Safety bollard", Vector3(bollard_x, 0.65, bollard_z), Vector3(0.18, 1.05, 0.18), ACCENT, false)
+			_add_box("Bollard reflective band", Vector3(bollard_x, 0.83, bollard_z), Vector3(0.19, 0.12, 0.19), Color(0.82, 0.78, 0.62), false)
+	for drain_z in [-18.0, -7.0, 5.0, 13.0]:
+		_add_box("Yard drainage channel", Vector3(8.8, 0.018, drain_z), Vector3(0.42, 0.025, 3.2), DARK_CONCRETE, false)
+		for grate_x in range(5):
+			_add_box("Drain grate bar", Vector3(8.62 + grate_x * 0.09, 0.035, drain_z), Vector3(0.025, 0.018, 3.0), PALE_METAL, false)
+	for stop_z in [-12.0, -9.0]:
+		_add_box("Loading wheel stop", Vector3(-7.0, 0.10, stop_z), Vector3(2.0, 0.20, 0.22), WARM_METAL, false)
+
+	# A few static status panels and warning markers provide visual landmarks.
+	_add_box("Yard status cabinet", Vector3(-18.8, 1.5, -17.0), Vector3(0.75, 1.8, 0.55), DARK_CONCRETE, false)
+	_add_box("Status cabinet face", Vector3(-18.8, 1.65, -16.70), Vector3(0.48, 0.92, 0.035), Color(0.12, 0.20, 0.21), false)
+	_add_box("Status green indicator", Vector3(-18.8, 1.95, -16.66), Vector3(0.10, 0.10, 0.035), Color(0.28, 0.58, 0.40), false)
+	_add_box("Status amber indicator", Vector3(-18.8, 1.70, -16.66), Vector3(0.10, 0.10, 0.035), ACCENT, false)
+	_add_label("GRID  /  AUX POWER", Vector3(-18.8, 2.65, -16.4), 10, Color(0.72, 0.81, 0.77))
+	_add_box("Terminal warning stripe left", Vector3(-0.78, 0.18, -23.48), Vector3(0.12, 0.035, 1.05), ACCENT, false)
+	_add_box("Terminal warning stripe right", Vector3(0.78, 0.18, -23.48), Vector3(0.12, 0.035, 1.05), ACCENT, false)
+	_add_box("Terminal screen bezel", Vector3(0.0, 1.36, -24.43), Vector3(1.22, 0.66, 0.07), PALE_METAL, false)
+	_add_box("Terminal screen glass", Vector3(0.0, 1.36, -24.385), Vector3(1.08, 0.52, 0.025), Color(0.10, 0.24, 0.25), false)
+	_add_box("Terminal keyboard", Vector3(0.0, 1.04, -24.26), Vector3(0.82, 0.045, 0.28), DARK_CONCRETE, false)
+
+	# Extraction marker gets a clear physical base and reflective identification.
+	_add_box("Extraction beacon equipment case", Vector3(1.25, 0.55, 17.0), Vector3(0.8, 1.1, 0.8), DARK_CONCRETE, false)
+	_add_box("Extraction case label", Vector3(1.25, 0.58, 16.57), Vector3(0.48, 0.24, 0.035), Color(0.16, 0.28, 0.29), false)
+	_add_label("RENDEZVOUS  /  04", Vector3(1.25, 1.35, 16.3), 11, Color(0.86, 0.78, 0.58))
 
 func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_color: Color, solid: bool = true) -> void:
 	var root: Node3D
@@ -180,6 +255,7 @@ func _create_mission_manager() -> void:
 			mission_manager.is_active = true
 			mission_manager.is_complete = false
 			mission_manager.objective_changed.emit(mission_manager.current_objective_index, mission_manager.get_current_objective())
+	_refresh_objective_tracker()
 
 func _create_save_system() -> void:
 	save_system = ShadowFrontSaveSystem.new()
@@ -222,14 +298,31 @@ func _on_objective_body_entered(body: Node3D, objective_index: int) -> void:
 	mission_manager.complete_current_objective()
 	_save_current_progress()
 
+func _refresh_objective_tracker() -> void:
+	if not is_instance_valid(objective_tracker_label) or not is_instance_valid(mission_manager):
+		return
+	var lines: Array[String] = []
+	var descriptions: Array[String] = [
+		"Reach the warehouse loading bay",
+		"Recover the data from the terminal",
+		"Return to the extraction rendezvous"
+	]
+	for i in range(descriptions.size()):
+		var marker := "✓" if i < mission_manager.current_objective_index or mission_manager.is_complete else ("›" if i == mission_manager.current_objective_index else "·")
+		lines.append("%s  %02d  %s" % [marker, i + 1, descriptions[i]])
+	objective_tracker_label.text = "MISSION TRACKER\n" + "\n".join(lines)
+
 func _on_mission_objective_changed(index: int, description: String) -> void:
 	mission_status_label.text = "%s  |  %s" % [mission_manager.get_objective_counter(), description]
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
+	_refresh_objective_tracker()
+	_show_mission_event("OBJECTIVE UPDATED", description, 3.2)
 
 func _on_mission_completed() -> void:
 	mission_status_label.text = "MISSION COMPLETE  |  Northstar Terminal secured"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.88, 0.62))
 	_save_current_progress()
+	_show_mission_event("MISSION COMPLETE", "Northstar Terminal secured", 4.0)
 	_show_mission_complete_screen()
 
 func _create_checkpoint_trigger() -> void:
@@ -257,6 +350,7 @@ func _on_checkpoint_body_entered(body: Node3D) -> void:
 	_save_current_progress()
 	mission_status_label.text = "CHECKPOINT SAVED  |  Warehouse entrance"
 	mission_status_label.add_theme_color_override("font_color", Color(0.55, 0.82, 0.96))
+	_show_mission_event("CHECKPOINT SAVED", "Warehouse entrance", 3.0)
 
 func _create_pause_menu() -> void:
 	pause_menu = ShadowFrontPauseMenu.new()
@@ -287,8 +381,14 @@ func _on_companion_interaction() -> void:
 		return
 	if companion.global_position.distance_to(player.global_position) > 3.5:
 		return
-	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line(mission_manager.current_objective_index)
+	var radio_line := companion.get_radio_line(mission_manager.current_objective_index)
+	companion.play_radio_acknowledgement()
+	mission_status_label.text = "SQUAD LINK  |  " + radio_line
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
+	if is_instance_valid(squad_dialogue_label):
+		squad_dialogue_label.text = "ELIAS ROOK  /  " + radio_line
+		squad_dialogue_label.visible = true
+		squad_dialogue_time_remaining = 4.8
 
 func _open_terminal_intel() -> void:
 	if has_meta("intel_overlay_layer") or mission_manager.current_objective_index != 1:
@@ -537,6 +637,67 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_on_companion_interaction()
 
+func _process(delta: float) -> void:
+	_update_interaction_feedback()
+	navigation_refresh_time -= delta
+	if navigation_refresh_time <= 0.0:
+		navigation_refresh_time = 0.15
+		_update_navigation_feedback()
+	if mission_event_time_remaining > 0.0:
+		mission_event_time_remaining = maxf(0.0, mission_event_time_remaining - delta)
+		if mission_event_time_remaining <= 0.0 and is_instance_valid(mission_event_label):
+			mission_event_label.visible = false
+	if squad_dialogue_time_remaining > 0.0:
+		squad_dialogue_time_remaining = maxf(0.0, squad_dialogue_time_remaining - delta)
+		if squad_dialogue_time_remaining <= 0.0 and is_instance_valid(squad_dialogue_label):
+			squad_dialogue_label.visible = false
+
+func _update_navigation_feedback() -> void:
+	if not is_instance_valid(navigation_label) or not is_instance_valid(player) or not is_instance_valid(mission_manager):
+		return
+	if mission_manager.is_complete or has_meta("deployment_briefing_layer") or has_meta("mission_complete_layer"):
+		navigation_label.visible = false
+		return
+	var targets: Array[Vector3] = [
+		Vector3(0.0, 0.0, -14.0),
+		Vector3(0.0, 0.0, -24.0),
+		Vector3(0.0, 0.0, 17.0)
+	]
+	var index := clampi(mission_manager.current_objective_index, 0, targets.size() - 1)
+	var offset := targets[index] - player.global_position
+	var distance := offset.length()
+	var local_direction := player.global_transform.basis.inverse() * offset.normalized()
+	var direction_text := "AHEAD"
+	if local_direction.z > 0.45:
+		direction_text = "BEHIND"
+	elif local_direction.x < -0.35:
+		direction_text = "LEFT"
+	elif local_direction.x > 0.35:
+		direction_text = "RIGHT"
+	navigation_label.text = "OBJECTIVE  %dm   /   %s" % [roundi(distance), direction_text]
+	navigation_label.visible = true
+
+func _show_mission_event(heading: String, detail: String, duration: float) -> void:
+	if not is_instance_valid(mission_event_label):
+		return
+	mission_event_label.text = heading + "  /  " + detail
+	mission_event_label.visible = true
+	mission_event_time_remaining = duration
+
+func _update_interaction_feedback() -> void:
+	if not is_instance_valid(interaction_prompt_label) or not is_instance_valid(player):
+		return
+	if has_meta("deployment_briefing_layer") or has_meta("intel_overlay_layer") or has_meta("mission_complete_layer"):
+		interaction_prompt_label.visible = false
+		return
+	var prompt_text := ""
+	if mission_manager.current_objective_index == 1 and player.global_position.distance_to(Vector3(0.0, 0.0, -24.0)) <= 3.5:
+		prompt_text = "E   ACCESS INCIDENT LOG"
+	elif is_instance_valid(companion) and companion.global_position.distance_to(player.global_position) <= 3.5:
+		prompt_text = "E   CHECK IN WITH ELIAS"
+	interaction_prompt_label.text = prompt_text
+	interaction_prompt_label.visible = not prompt_text.is_empty()
+
 func _physics_process(_delta: float) -> void:
 	if is_instance_valid(player) and player.global_position.y < -5.0:
 		player.global_position = mission_manager.checkpoint_position
@@ -558,6 +719,30 @@ func _create_hud() -> void:
 	label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(label)
 
+	navigation_label = Label.new()
+	navigation_label.name = "ObjectiveNavigation"
+	navigation_label.anchor_left = 0.68
+	navigation_label.anchor_right = 0.98
+	navigation_label.anchor_top = 0.035
+	navigation_label.anchor_bottom = 0.095
+	navigation_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	navigation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	navigation_label.add_theme_font_size_override("font_size", 17)
+	navigation_label.add_theme_color_override("font_color", Color(0.88, 0.91, 0.86))
+	navigation_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	navigation_label.add_theme_constant_override("outline_size", 5)
+	layer.add_child(navigation_label)
+
+	objective_tracker_label = Label.new()
+	objective_tracker_label.name = "ObjectiveTracker"
+	objective_tracker_label.position = Vector2(18.0, 160.0)
+	objective_tracker_label.size = Vector2(430.0, 96.0)
+	objective_tracker_label.add_theme_font_size_override("font_size", 15)
+	objective_tracker_label.add_theme_color_override("font_color", Color(0.82, 0.87, 0.85))
+	objective_tracker_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	objective_tracker_label.add_theme_constant_override("outline_size", 4)
+	layer.add_child(objective_tracker_label)
+
 	mission_status_label = Label.new()
 	mission_status_label.position = Vector2(14.0, 92.0)
 	mission_status_label.size = Vector2(570.0, 26.0)
@@ -565,4 +750,52 @@ func _create_hud() -> void:
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
 	mission_status_label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(mission_status_label)
+
+	mission_event_label = Label.new()
+	mission_event_label.name = "MissionEventFeedback"
+	mission_event_label.anchor_left = 0.18
+	mission_event_label.anchor_right = 0.82
+	mission_event_label.anchor_top = 0.105
+	mission_event_label.anchor_bottom = 0.18
+	mission_event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_event_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mission_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mission_event_label.add_theme_font_size_override("font_size", 22)
+	mission_event_label.add_theme_color_override("font_color", Color(0.91, 0.88, 0.76))
+	mission_event_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	mission_event_label.add_theme_constant_override("outline_size", 5)
+	mission_event_label.visible = false
+	layer.add_child(mission_event_label)
+
+	interaction_prompt_label = Label.new()
+	interaction_prompt_label.name = "InteractionPrompt"
+	interaction_prompt_label.anchor_left = 0.20
+	interaction_prompt_label.anchor_right = 0.80
+	interaction_prompt_label.anchor_top = 0.885
+	interaction_prompt_label.anchor_bottom = 0.93
+	interaction_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_prompt_label.add_theme_font_size_override("font_size", 19)
+	interaction_prompt_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.52))
+	interaction_prompt_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.95))
+	interaction_prompt_label.add_theme_constant_override("outline_size", 5)
+	interaction_prompt_label.visible = false
+	layer.add_child(interaction_prompt_label)
+
+	squad_dialogue_label = Label.new()
+	squad_dialogue_label.name = "SquadDialogueSubtitle"
+	squad_dialogue_label.anchor_left = 0.12
+	squad_dialogue_label.anchor_right = 0.88
+	squad_dialogue_label.anchor_top = 0.82
+	squad_dialogue_label.anchor_bottom = 0.875
+	squad_dialogue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	squad_dialogue_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	squad_dialogue_label.add_theme_font_size_override("font_size", 20)
+	squad_dialogue_label.add_theme_color_override("font_color", Color(0.90, 0.94, 0.93))
+	squad_dialogue_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	squad_dialogue_label.add_theme_constant_override("outline_size", 5)
+	squad_dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	squad_dialogue_label.visible = false
+	layer.add_child(squad_dialogue_label)
+
 	add_child(layer)

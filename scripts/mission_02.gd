@@ -18,6 +18,9 @@ var interaction_cooldown: bool = false
 var pause_layer: CanvasLayer
 var is_paused: bool = false
 var saved_mission_complete: bool = false
+var mission_event_label: Label
+var mission_event_time_remaining: float = 0.0
+var objective_tracker_label: Label
 
 const OBJECTIVES: Array[String] = [
 	"Reach the Larkspur clinic entrance",
@@ -137,6 +140,13 @@ func _create_hud() -> void:
 	heading.text = "PROJECT: SHADOW FRONT  /  02 — THE QUIET DISTRICT"
 	heading.add_theme_font_size_override("font_size", 16)
 	panel.add_child(heading)
+	objective_tracker_label = Label.new()
+	objective_tracker_label.name = "ObjectiveTracker"
+	objective_tracker_label.position = Vector2(18, 142)
+	objective_tracker_label.size = Vector2(470, 112)
+	objective_tracker_label.add_theme_font_size_override("font_size", 15)
+	objective_tracker_label.add_theme_color_override("font_color", Color(0.83, 0.88, 0.85))
+	layer.add_child(objective_tracker_label)
 	objective_label = Label.new()
 	objective_label.position = Vector2(14, 48)
 	objective_label.size = Vector2(620, 28)
@@ -150,7 +160,30 @@ func _create_hud() -> void:
 	prompt_label.text = "WASD Move  •  Mouse Look  •  E Interact  •  P Pause"
 	prompt_label.add_theme_font_size_override("font_size", 14)
 	panel.add_child(prompt_label)
+	mission_event_label = Label.new()
+	mission_event_label.name = "MissionEventFeedback"
+	mission_event_label.anchor_left = 0.16
+	mission_event_label.anchor_right = 0.84
+	mission_event_label.anchor_top = 0.12
+	mission_event_label.anchor_bottom = 0.19
+	mission_event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_event_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mission_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mission_event_label.add_theme_font_size_override("font_size", 21)
+	mission_event_label.add_theme_color_override("font_color", Color(0.91, 0.88, 0.76))
+	mission_event_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	mission_event_label.add_theme_constant_override("outline_size", 5)
+	mission_event_label.visible = false
+	layer.add_child(mission_event_label)
 	add_child(layer)
+	_refresh_objective_tracker()
+
+func _show_mission_event(message: String, duration: float = 3.0) -> void:
+	if not is_instance_valid(mission_event_label):
+		return
+	mission_event_label.text = message
+	mission_event_label.visible = true
+	mission_event_time_remaining = duration
 
 func _show_briefing() -> void:
 	briefing_layer = _make_overlay("MISSION BRIEFING", "THE QUIET DISTRICT", "Larkspur Ward has gone dark. Two relief coordinators checked in from the community clinic and then stopped responding. Nadia is already nearby. Confirm the coordinators are safe, recover the municipal dispatch record, and meet the team at the transit plaza.\n\nThis is a search and evidence-recovery mission. No hostile engagement is required.")
@@ -291,7 +324,11 @@ func _return_to_menu() -> void:
 	is_paused = false
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if mission_event_time_remaining > 0.0:
+		mission_event_time_remaining = maxf(0.0, mission_event_time_remaining - delta)
+		if mission_event_time_remaining <= 0.0 and is_instance_valid(mission_event_label):
+			mission_event_label.visible = false
 	if is_instance_valid(briefing_layer) or is_instance_valid(debrief_layer):
 		return
 	if objective_index == 0 and player.global_position.distance_to(Vector3(-10, 0, -6)) < 5.0:
@@ -311,6 +348,15 @@ func _handle_interaction() -> void:
 	elif player.global_position.distance_to(companion.global_position) < 4.0:
 		prompt_label.text = "ELIAS  |  " + companion.get_radio_line(objective_index)
 
+func _refresh_objective_tracker() -> void:
+	if not is_instance_valid(objective_tracker_label):
+		return
+	var lines: Array[String] = []
+	for i in range(OBJECTIVES.size()):
+		var state := "✓" if i < objective_index else ("›" if i == objective_index and not saved_mission_complete else "·")
+		lines.append("%s  %02d  %s" % [state, i + 1, OBJECTIVES[i]])
+	objective_tracker_label.text = "MISSION TRACKER\n" + "\n".join(lines)
+
 func _complete_objective() -> void:
 	if objective_index >= OBJECTIVES.size():
 		return
@@ -320,9 +366,14 @@ func _complete_objective() -> void:
 		saved_mission_complete = true
 		_save_progress()
 		objective_label.text = "ALL OBJECTIVES COMPLETE  |  Larkspur team accounted for"
+		_refresh_objective_tracker()
+		_show_mission_event("MISSION COMPLETE  /  TEAM ACCOUNTED FOR", 5.0)
 		_show_debrief()
 	else:
 		objective_label.text = "OBJECTIVE %d / 4  |  %s" % [objective_index + 1, OBJECTIVES[objective_index]]
+	_refresh_objective_tracker()
+		_refresh_objective_tracker()
+		_show_mission_event("OBJECTIVE UPDATED  /  " + OBJECTIVES[objective_index], 3.4)
 
 func _load_progress() -> void:
 	var config := ConfigFile.new()

@@ -1,6 +1,7 @@
 extends Control
 
 const PROTOTYPE_SCENE := "res://scenes/prototype.tscn"
+const OPENING_CINEMATIC_SCENE := "res://scenes/opening_cinematic.tscn"
 const SAVE_PATH := "user://shadow_front_save.cfg"
 const SAVE_SECTION := "northstar_first_contact"
 const MISSION_TWO_SAVE_SECTION := "the_quiet_district"
@@ -170,7 +171,7 @@ func _continue_campaign() -> void:
 		if config.get_value(MISSION_TWO_SAVE_SECTION, "mission_id", "") == "the_quiet_district" and not bool(config.get_value(MISSION_TWO_SAVE_SECTION, "mission_complete", false)):
 			get_tree().change_scene_to_file("res://scenes/mission_02.tscn")
 			return
-	get_tree().change_scene_to_file(PROTOTYPE_SCENE)
+	get_tree().change_scene_to_file(OPENING_CINEMATIC_SCENE)
 
 func _start_mission_two() -> void:
 	get_tree().change_scene_to_file("res://scenes/mission_02.tscn")
@@ -192,4 +193,4 @@ func _start_new_campaign() -> void:
 	elif load_error != ERR_FILE_NOT_FOUND:
 		status_label.text = "SAVE COULD NOT BE READ  /  " + error_string(load_error)
 		return
-	get_tree().change_scene_to_file(PROTOTYPE_SCENE)
+	get_tree().change_scene_to_file(OPENING_CINEMATIC_SCENE)
