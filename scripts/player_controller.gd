@@ -28,10 +28,19 @@ var crouching_capsule_height: float = 1.2
 var standing_head_height: float = 1.55
 var crouching_head_height: float = 1.0
 
+# Subtle first-person movement feedback. These values are intentionally small
+# so the camera remains comfortable and inexpensive on integrated graphics.
+var movement_time: float = 0.0
+var landing_camera_offset: float = 0.0
+var camera_base_position: Vector3 = Vector3.ZERO
+var was_on_floor: bool = false
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	mouse_captured = true
 	camera.fov = standing_fov
+	camera_base_position = camera.position
+	was_on_floor = is_on_floor()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and mouse_captured:
@@ -51,6 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_set_crouching(crouch_toggled or Input.is_key_pressed(KEY_CTRL))
+	var grounded_before_move := is_on_floor()
 
 	if not is_on_floor():
 		velocity.y -= gravity * delta
@@ -83,8 +93,29 @@ func _physics_process(delta: float) -> void:
 	velocity.x = horizontal_velocity.x
 	velocity.z = horizontal_velocity.z
 
+	var is_moving := input_vector.length_squared() > 0.0 and is_on_floor()
+	if is_moving:
+		var stride_rate := 10.0 if target_speed == sprint_speed else 7.2
+		movement_time += delta * stride_rate
+	else:
+		movement_time = move_toward(movement_time, 0.0, delta * 2.0)
+
+	var bob_amount := 0.0
+	if is_moving:
+		bob_amount = 0.022 if target_speed == sprint_speed else 0.012
+	elif is_on_floor():
+		bob_amount = 0.003
+	var camera_bob := sin(movement_time) * bob_amount
+	landing_camera_offset = move_toward(landing_camera_offset, 0.0, delta * 0.42)
+	camera.position.y = camera_base_position.y + camera_bob + landing_camera_offset
+	var target_roll := -input_vector.x * 0.012 if is_moving else 0.0
+	camera.rotation.z = move_toward(camera.rotation.z, target_roll, delta * 2.8)
+
 	camera.fov = move_toward(camera.fov, sprint_fov if target_speed == sprint_speed and input_vector.length() > 0.0 else standing_fov, 30.0 * delta)
 	move_and_slide()
+	if not grounded_before_move and is_on_floor():
+		landing_camera_offset = -0.055
+	was_on_floor = is_on_floor()
 
 func _set_crouching(enabled: bool) -> void:
 	if is_crouching == enabled:
