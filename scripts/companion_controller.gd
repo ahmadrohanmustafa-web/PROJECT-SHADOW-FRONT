@@ -21,6 +21,7 @@ var right_leg_pivot: Node3D
 var animation_time: float = 0.0
 var previous_position: Vector3
 var movement_blend: float = 0.0
+var acknowledgement_time: float = 0.0
 
 var radio_lines: Array[String] = [
 	"I'm with you. Let's bring that data home.",
@@ -39,6 +40,9 @@ func get_radio_line(objective_index: int = -1) -> String:
 	var line := radio_lines[contextual_index % radio_lines.size()]
 	dialogue_index += 1
 	return line
+
+func play_radio_acknowledgement() -> void:
+	acknowledgement_time = 1.25
 
 func _ready() -> void:
 	previous_position = global_position
@@ -136,6 +140,14 @@ func _animate_character(delta: float) -> void:
 		torso_pivot.rotation.z = sin(animation_time * 1.1) * 0.012
 		head_pivot.rotation.x = sin(animation_time * 1.3) * 0.025
 		head_pivot.rotation.y = sin(animation_time * 0.55) * 0.045
+	var acknowledgement_blend := 0.0
+	if acknowledgement_time > 0.0:
+		acknowledgement_time = maxf(0.0, acknowledgement_time - delta)
+		acknowledgement_blend = sin((acknowledgement_time / 1.25) * PI)
+	if is_instance_valid(right_arm_pivot):
+		right_arm_pivot.rotation.z = -0.82 * acknowledgement_blend
+	if is_instance_valid(head_pivot):
+		head_pivot.rotation.y += -0.10 * acknowledgement_blend
 
 func _material(tint: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
