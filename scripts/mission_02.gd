@@ -20,6 +20,7 @@ var is_paused: bool = false
 var saved_mission_complete: bool = false
 var mission_event_label: Label
 var mission_event_time_remaining: float = 0.0
+var objective_tracker_label: Label
 
 const OBJECTIVES: Array[String] = [
 	"Reach the Larkspur clinic entrance",
@@ -139,6 +140,13 @@ func _create_hud() -> void:
 	heading.text = "PROJECT: SHADOW FRONT  /  02 — THE QUIET DISTRICT"
 	heading.add_theme_font_size_override("font_size", 16)
 	panel.add_child(heading)
+	objective_tracker_label = Label.new()
+	objective_tracker_label.name = "ObjectiveTracker"
+	objective_tracker_label.position = Vector2(18, 142)
+	objective_tracker_label.size = Vector2(470, 112)
+	objective_tracker_label.add_theme_font_size_override("font_size", 15)
+	objective_tracker_label.add_theme_color_override("font_color", Color(0.83, 0.88, 0.85))
+	layer.add_child(objective_tracker_label)
 	objective_label = Label.new()
 	objective_label.position = Vector2(14, 48)
 	objective_label.size = Vector2(620, 28)
@@ -168,6 +176,7 @@ func _create_hud() -> void:
 	mission_event_label.visible = false
 	layer.add_child(mission_event_label)
 	add_child(layer)
+	_refresh_objective_tracker()
 
 func _show_mission_event(message: String, duration: float = 3.0) -> void:
 	if not is_instance_valid(mission_event_label):
@@ -339,6 +348,15 @@ func _handle_interaction() -> void:
 	elif player.global_position.distance_to(companion.global_position) < 4.0:
 		prompt_label.text = "ELIAS  |  " + companion.get_radio_line(objective_index)
 
+func _refresh_objective_tracker() -> void:
+	if not is_instance_valid(objective_tracker_label):
+		return
+	var lines: Array[String] = []
+	for i in range(OBJECTIVES.size()):
+		var state := "✓" if i < objective_index else ("›" if i == objective_index and not saved_mission_complete else "·")
+		lines.append("%s  %02d  %s" % [state, i + 1, OBJECTIVES[i]])
+	objective_tracker_label.text = "MISSION TRACKER\n" + "\n".join(lines)
+
 func _complete_objective() -> void:
 	if objective_index >= OBJECTIVES.size():
 		return
@@ -348,10 +366,13 @@ func _complete_objective() -> void:
 		saved_mission_complete = true
 		_save_progress()
 		objective_label.text = "ALL OBJECTIVES COMPLETE  |  Larkspur team accounted for"
+		_refresh_objective_tracker()
 		_show_mission_event("MISSION COMPLETE  /  TEAM ACCOUNTED FOR", 5.0)
 		_show_debrief()
 	else:
 		objective_label.text = "OBJECTIVE %d / 4  |  %s" % [objective_index + 1, OBJECTIVES[objective_index]]
+	_refresh_objective_tracker()
+		_refresh_objective_tracker()
 		_show_mission_event("OBJECTIVE UPDATED  /  " + OBJECTIVES[objective_index], 3.4)
 
 func _load_progress() -> void:
