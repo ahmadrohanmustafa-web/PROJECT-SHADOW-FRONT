@@ -109,6 +109,73 @@ func _create_level() -> void:
 	_add_box("Extraction beacon mast", Vector3(0.0, 2.2, 17.0), Vector3(0.18, 4.1, 0.18), ACCENT, false)
 	_add_box("Extraction beacon crossbar", Vector3(0.0, 4.1, 17.0), Vector3(1.5, 0.12, 0.12), ACCENT, false)
 	_add_label("EXTRACTION  /  RENDEZVOUS", Vector3(0.0, 4.8, 16.0), 20, Color(1.0, 0.76, 0.36))
+	_create_level_detail_pass()
+
+func _create_level_detail_pass() -> void:
+	# Warehouse facade: recessed-looking bays, narrow windows, service conduits,
+	# dock bumpers and roof edging add depth without adding dynamic lights.
+	for bay_x in [-3.2, 3.2]:
+		_add_box("Loading bay inner shadow", Vector3(bay_x, 2.0, -15.48), Vector3(2.5, 3.6, 0.08), DARK_CONCRETE, false)
+		_add_box("Loading bay door panel", Vector3(bay_x, 2.05, -15.40), Vector3(2.15, 3.25, 0.06), Color(0.18, 0.22, 0.23), false)
+		for rib_y in range(7):
+			_add_box("Loading door horizontal rib", Vector3(bay_x, 0.65 + rib_y * 0.43, -15.34), Vector3(2.12, 0.035, 0.035), PALE_METAL, false)
+		_add_box("Dock rubber bumper", Vector3(bay_x - 1.2, 0.55, -15.15), Vector3(0.18, 0.75, 0.22), DARK_CONCRETE, false)
+		_add_box("Dock rubber bumper", Vector3(bay_x + 1.2, 0.55, -15.15), Vector3(0.18, 0.75, 0.22), DARK_CONCRETE, false)
+
+	for window_x in [-16.0, -13.0, -10.0, 10.0, 13.0, 16.0]:
+		_add_box("Warehouse high window", Vector3(window_x, 4.35, -15.91), Vector3(1.65, 0.72, 0.045), Color(0.12, 0.20, 0.22), false)
+		_add_box("Warehouse window sill", Vector3(window_x, 3.96, -15.86), Vector3(1.78, 0.08, 0.12), WARM_METAL, false)
+		_add_box("Window vertical divider", Vector3(window_x, 4.35, -15.82), Vector3(0.055, 0.72, 0.06), PALE_METAL, false)
+
+	# Exposed utility lines and cable trays make the service building readable.
+	for pipe_y in [2.45, 2.72, 2.99]:
+		_add_box("Service wall utility pipe", Vector3(10.43, pipe_y, 1.0), Vector3(0.08, 0.08, 6.7), PALE_METAL, false)
+	_add_box("Service cable tray", Vector3(14.0, 3.15, -3.12), Vector3(6.5, 0.12, 0.12), DARK_CONCRETE, false)
+	_add_box("Service door frame", Vector3(10.34, 1.12, -3.12), Vector3(1.62, 2.34, 0.10), PALE_METAL, false)
+	_add_box("Service door handle", Vector3(10.12, 1.15, -3.20), Vector3(0.045, 0.24, 0.045), ACCENT, false)
+	_add_label("MAINTENANCE  /  AUTHORIZED STAFF", Vector3(14.0, 2.65, -3.25), 11, Color(0.78, 0.82, 0.77))
+
+	# Container corner castings and vertical ribs; visual-only to keep collision
+	# complexity unchanged from the existing playable blockout.
+	for z_offset in [-1.42, 1.42]:
+		for x_offset in [-2.42, 2.42]:
+			_add_box("Container corner casting", Vector3(-12.0 + x_offset, 1.25, -5.0 + z_offset), Vector3(0.16, 2.48, 0.16), PALE_METAL, false)
+			_add_box("Container corner casting", Vector3(-12.0 + x_offset, 3.85, -5.0 + z_offset), Vector3(0.16, 2.48, 0.16), PALE_METAL, false)
+	for rib_x in range(1, 9):
+		var x_pos := -14.25 + rib_x * 0.56
+		_add_box("Container corrugation", Vector3(x_pos, 1.25, -3.46), Vector3(0.045, 2.35, 0.055), PALE_METAL, false)
+		_add_box("Container corrugation", Vector3(x_pos, 3.85, -3.46), Vector3(0.045, 2.35, 0.055), PALE_METAL, false)
+	_add_label("NSTR  /  04", Vector3(-12.0, 2.0, -3.34), 15, Color(0.82, 0.84, 0.76))
+
+	# Yard safety details: bollards, drain grates, wheel stops and painted edges.
+	for bollard_x in [-5.0, 5.0]:
+		for bollard_z in [-13.0, -10.0]:
+			_add_box("Safety bollard base", Vector3(bollard_x, 0.12, bollard_z), Vector3(0.48, 0.24, 0.48), DARK_CONCRETE, false)
+			_add_box("Safety bollard", Vector3(bollard_x, 0.65, bollard_z), Vector3(0.18, 1.05, 0.18), ACCENT, false)
+			_add_box("Bollard reflective band", Vector3(bollard_x, 0.83, bollard_z), Vector3(0.19, 0.12, 0.19), Color(0.82, 0.78, 0.62), false)
+	for drain_z in [-18.0, -7.0, 5.0, 13.0]:
+		_add_box("Yard drainage channel", Vector3(8.8, 0.018, drain_z), Vector3(0.42, 0.025, 3.2), DARK_CONCRETE, false)
+		for grate_x in range(5):
+			_add_box("Drain grate bar", Vector3(8.62 + grate_x * 0.09, 0.035, drain_z), Vector3(0.025, 0.018, 3.0), PALE_METAL, false)
+	for stop_z in [-12.0, -9.0]:
+		_add_box("Loading wheel stop", Vector3(-7.0, 0.10, stop_z), Vector3(2.0, 0.20, 0.22), WARM_METAL, false)
+
+	# A few static status panels and warning markers provide visual landmarks.
+	_add_box("Yard status cabinet", Vector3(-18.8, 1.5, -17.0), Vector3(0.75, 1.8, 0.55), DARK_CONCRETE, false)
+	_add_box("Status cabinet face", Vector3(-18.8, 1.65, -16.70), Vector3(0.48, 0.92, 0.035), Color(0.12, 0.20, 0.21), false)
+	_add_box("Status green indicator", Vector3(-18.8, 1.95, -16.66), Vector3(0.10, 0.10, 0.035), Color(0.28, 0.58, 0.40), false)
+	_add_box("Status amber indicator", Vector3(-18.8, 1.70, -16.66), Vector3(0.10, 0.10, 0.035), ACCENT, false)
+	_add_label("GRID  /  AUX POWER", Vector3(-18.8, 2.65, -16.4), 10, Color(0.72, 0.81, 0.77))
+	_add_box("Terminal warning stripe left", Vector3(-0.78, 0.18, -23.48), Vector3(0.12, 0.035, 1.05), ACCENT, false)
+	_add_box("Terminal warning stripe right", Vector3(0.78, 0.18, -23.48), Vector3(0.12, 0.035, 1.05), ACCENT, false)
+	_add_box("Terminal screen bezel", Vector3(0.0, 1.36, -24.43), Vector3(1.22, 0.66, 0.07), PALE_METAL, false)
+	_add_box("Terminal screen glass", Vector3(0.0, 1.36, -24.385), Vector3(1.08, 0.52, 0.025), Color(0.10, 0.24, 0.25), false)
+	_add_box("Terminal keyboard", Vector3(0.0, 1.04, -24.26), Vector3(0.82, 0.045, 0.28), DARK_CONCRETE, false)
+
+	# Extraction marker gets a clear physical base and reflective identification.
+	_add_box("Extraction beacon equipment case", Vector3(1.25, 0.55, 17.0), Vector3(0.8, 1.1, 0.8), DARK_CONCRETE, false)
+	_add_box("Extraction case label", Vector3(1.25, 0.58, 16.57), Vector3(0.48, 0.24, 0.035), Color(0.16, 0.28, 0.29), false)
+	_add_label("RENDEZVOUS  /  04", Vector3(1.25, 1.35, 16.3), 11, Color(0.86, 0.78, 0.58))
 
 func _add_box(box_name: String, box_position: Vector3, box_size: Vector3, box_color: Color, solid: bool = true) -> void:
 	var root: Node3D
