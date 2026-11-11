@@ -193,4 +193,4 @@ func _start_new_campaign() -> void:
 	elif load_error != ERR_FILE_NOT_FOUND:
 		status_label.text = "SAVE COULD NOT BE READ  /  " + error_string(load_error)
 		return
-	get_tree().change_scene_to_file(PROTOTYPE_SCENE)
+	get_tree().change_scene_to_file(OPENING_CINEMATIC_SCENE)
