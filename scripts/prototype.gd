@@ -22,6 +22,7 @@ var squad_dialogue_time_remaining: float = 0.0
 var mission_event_label: Label
 var mission_event_time_remaining: float = 0.0
 var navigation_label: Label
+var objective_tracker_label: Label
 var navigation_refresh_time: float = 0.0
 
 func _ready() -> void:
@@ -254,6 +255,7 @@ func _create_mission_manager() -> void:
 			mission_manager.is_active = true
 			mission_manager.is_complete = false
 			mission_manager.objective_changed.emit(mission_manager.current_objective_index, mission_manager.get_current_objective())
+	_refresh_objective_tracker()
 
 func _create_save_system() -> void:
 	save_system = ShadowFrontSaveSystem.new()
@@ -296,9 +298,24 @@ func _on_objective_body_entered(body: Node3D, objective_index: int) -> void:
 	mission_manager.complete_current_objective()
 	_save_current_progress()
 
+func _refresh_objective_tracker() -> void:
+	if not is_instance_valid(objective_tracker_label) or not is_instance_valid(mission_manager):
+		return
+	var lines: Array[String] = []
+	var descriptions: Array[String] = [
+		"Reach the warehouse loading bay",
+		"Recover the data from the terminal",
+		"Return to the extraction rendezvous"
+	]
+	for i in range(descriptions.size()):
+		var marker := "✓" if i < mission_manager.current_objective_index or mission_manager.is_complete else ("›" if i == mission_manager.current_objective_index else "·")
+		lines.append("%s  %02d  %s" % [marker, i + 1, descriptions[i]])
+	objective_tracker_label.text = "MISSION TRACKER\n" + "\n".join(lines)
+
 func _on_mission_objective_changed(index: int, description: String) -> void:
 	mission_status_label.text = "%s  |  %s" % [mission_manager.get_objective_counter(), description]
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
+	_refresh_objective_tracker()
 	_show_mission_event("OBJECTIVE UPDATED", description, 3.2)
 
 func _on_mission_completed() -> void:
@@ -715,6 +732,16 @@ func _create_hud() -> void:
 	navigation_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
 	navigation_label.add_theme_constant_override("outline_size", 5)
 	layer.add_child(navigation_label)
+
+	objective_tracker_label = Label.new()
+	objective_tracker_label.name = "ObjectiveTracker"
+	objective_tracker_label.position = Vector2(18.0, 160.0)
+	objective_tracker_label.size = Vector2(430.0, 96.0)
+	objective_tracker_label.add_theme_font_size_override("font_size", 15)
+	objective_tracker_label.add_theme_color_override("font_color", Color(0.82, 0.87, 0.85))
+	objective_tracker_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	objective_tracker_label.add_theme_constant_override("outline_size", 4)
+	layer.add_child(objective_tracker_label)
 
 	mission_status_label = Label.new()
 	mission_status_label.position = Vector2(14.0, 92.0)
