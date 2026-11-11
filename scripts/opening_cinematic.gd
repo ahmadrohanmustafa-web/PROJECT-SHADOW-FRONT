@@ -13,6 +13,9 @@ var kicker: Label
 var headline: Label
 var body_copy: Label
 var progress_fill: ColorRect
+var subtitle_speaker: Label
+var subtitle_line: Label
+var elias: ShadowFrontCompanion
 var signal_bars: Array[ColorRect] = []
 var elapsed := 0.0
 var finished := false
@@ -73,6 +76,7 @@ func _build_world() -> void:
 		_add_box("Warning lamp", Vector3(x * 0.94, 11.35, -14.0), Vector3(0.32, 0.18, 0.32), ACCENT)
 
 	_build_operator()
+	_build_elias()
 
 func _build_operator() -> void:
 	operator_root = Node3D.new()
@@ -87,6 +91,16 @@ func _build_operator() -> void:
 	_add_character_mesh(CapsuleMesh.new(), operator_root, Vector3(-0.19, 0.36, 0.0), Vector3(0.24, 0.72, 0.25), uniform)
 	_add_character_mesh(CapsuleMesh.new(), operator_root, Vector3(0.19, 0.36, 0.0), Vector3(0.24, 0.72, 0.25), uniform)
 	_add_box_child(operator_root, "Backpack", Vector3(0.0, 1.25, 0.27), Vector3(0.48, 0.65, 0.24), Color(0.075, 0.10, 0.10))
+
+func _build_elias() -> void:
+	# Reuse the established companion character so the opening matches the
+	# squad partner encountered in the playable mission.
+	elias = ShadowFrontCompanion.new()
+	elias.name = "EliasRook"
+	elias.position = Vector3(1.75, 0.0, -0.5)
+	elias.rotation.y = deg_to_rad(-8.0)
+	elias.scale = Vector3.ONE * 0.92
+	add_child(elias)
 
 func _add_character_mesh(mesh: PrimitiveMesh, parent: Node3D, mesh_position: Vector3, mesh_scale: Vector3, tint: Color) -> void:
 	var instance := MeshInstance3D.new()
@@ -180,8 +194,19 @@ func _build_overlay() -> void:
 		overlay.add_child(bar)
 		signal_bars.append(bar)
 
-	_add_overlay_rect(Vector2(104, 574), Vector2(1072, 2), Color(0.55, 0.66, 0.66, 0.5))
-	progress_fill = _add_overlay_rect(Vector2(104, 573), Vector2(0, 4), ACCENT)
+	_add_overlay_rect(Vector2(104, 516), Vector2(790, 66), Color(0.015, 0.028, 0.035, 0.78))
+	subtitle_speaker = _label("", 12, ACCENT)
+	subtitle_speaker.position = Vector2(124, 524)
+	subtitle_speaker.size = Vector2(740, 18)
+	overlay.add_child(subtitle_speaker)
+	subtitle_line = _label("", 17, PALE)
+	subtitle_line.position = Vector2(124, 545)
+	subtitle_line.size = Vector2(740, 30)
+	subtitle_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	overlay.add_child(subtitle_line)
+
+	_add_overlay_rect(Vector2(104, 604), Vector2(1072, 2), Color(0.55, 0.66, 0.66, 0.5))
+	progress_fill = _add_overlay_rect(Vector2(104, 603), Vector2(0, 4), ACCENT)
 	var skip := _label("PRESS ENTER OR SPACE TO SKIP", 12, Color(0.70, 0.77, 0.77))
 	skip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	skip.position = Vector2(820, 652)
@@ -203,20 +228,24 @@ func _process(delta: float) -> void:
 		operator_root.rotation.y = sin(elapsed * 0.35) * 0.025
 
 func _run_sequence() -> void:
-	await _show_beat("INCOMING TRANSMISSION  /  02:14", "NORTHSTAR HAS GONE QUIET.", "A routine night shift. A missed check-in. Then every channel went silent.", 3.8)
+	await _show_beat("INCOMING TRANSMISSION  /  02:14", "NORTHSTAR HAS GONE QUIET.", "A routine night shift. A missed check-in. Then every channel went silent.", 3.8, "ELIAS ROOK  /  COMMS", "Northstar, this is Field Team. Do you read?")
 	if finished: return
-	await _show_beat("VEYRA  /  NORTHERN INDUSTRIAL CORRIDOR", "THE LAST SIGNAL WAS AUTHENTIC.", "The relay confirms the distress call came from inside the terminal. Its timestamp does not match the public record.", 4.2)
+	await _show_beat("VEYRA  /  NORTHERN INDUSTRIAL CORRIDOR", "THE LAST SIGNAL WAS AUTHENTIC.", "The relay confirms the distress call came from inside the terminal. Its timestamp does not match the public record.", 4.2, "ELIAS ROOK  /  COMMS", "That timestamp is two minutes ahead of the relay log.")
 	if finished: return
-	await _show_beat("FIELD TEAM  /  DEPLOYMENT AUTHORIZED", "FIND THE ORIGINAL RECORD.", "You are being sent to recover the incident log and establish what happened before the story changes again.", 4.2)
+	await _show_beat("FIELD TEAM  /  DEPLOYMENT AUTHORIZED", "FIND THE ORIGINAL RECORD.", "You are being sent to recover the incident log and establish what happened before the story changes again.", 4.2, "ELIAS ROOK  /  COMMS", "I'll watch the comms. You get the original record.")
 	if finished: return
-	await _show_beat("CHAPTER 01  /  COLD SIGNAL", "SOMEONE CHANGED THE TIMELINE.", "Northstar Terminal  •  02:14 local time  •  Operation begins now.", 3.4)
+	await _show_beat("CHAPTER 01  /  COLD SIGNAL", "SOMEONE CHANGED THE TIMELINE.", "Northstar Terminal  •  02:14 local time  •  Operation begins now.", 3.4, "ELIAS ROOK  /  COMMS", "Let's find out who changed it.")
 	if finished: return
 	_finish_intro()
 
-func _show_beat(new_kicker: String, new_headline: String, new_body: String, hold_seconds: float) -> void:
+func _show_beat(new_kicker: String, new_headline: String, new_body: String, hold_seconds: float, speaker: String, dialogue: String) -> void:
 	kicker.text = new_kicker
 	headline.text = new_headline
 	body_copy.text = new_body
+	subtitle_speaker.text = speaker
+	subtitle_line.text = dialogue
+	subtitle_speaker.modulate.a = 0.0
+	subtitle_line.modulate.a = 0.0
 	kicker.modulate.a = 0.0
 	headline.modulate.a = 0.0
 	body_copy.modulate.a = 0.0
@@ -227,6 +256,8 @@ func _show_beat(new_kicker: String, new_headline: String, new_body: String, hold
 	sequence_tween.tween_property(kicker, "modulate:a", 1.0, 0.65)
 	sequence_tween.tween_property(headline, "modulate:a", 1.0, 0.85).set_delay(0.12)
 	sequence_tween.tween_property(body_copy, "modulate:a", 1.0, 0.9).set_delay(0.3)
+	sequence_tween.tween_property(subtitle_speaker, "modulate:a", 1.0, 0.65).set_delay(0.45)
+	sequence_tween.tween_property(subtitle_line, "modulate:a", 1.0, 0.75).set_delay(0.55)
 	var target_width := 1072.0 * clampf((elapsed + hold_seconds) / 15.6, 0.0, 1.0)
 	sequence_tween.tween_property(progress_fill, "size:x", target_width, hold_seconds)
 	await get_tree().create_timer(hold_seconds).timeout
