@@ -24,6 +24,7 @@ var objective_index: int = 0
 var is_paused: bool = false
 var saved_mission_complete: bool = false
 var optional_note_found: bool = false
+var objective_tracker_label: Label
 
 func _ready() -> void:
 	_create_environment()
@@ -140,6 +141,13 @@ func _create_hud() -> void:
 	heading.text = "PROJECT: SHADOW FRONT  /  03 — PAPER TRAILS"
 	heading.add_theme_font_size_override("font_size", 16)
 	panel.add_child(heading)
+	objective_tracker_label = Label.new()
+	objective_tracker_label.name = "ObjectiveTracker"
+	objective_tracker_label.position = Vector2(18, 152)
+	objective_tracker_label.size = Vector2(500, 132)
+	objective_tracker_label.add_theme_font_size_override("font_size", 15)
+	objective_tracker_label.add_theme_color_override("font_color", Color(0.83, 0.88, 0.85))
+	layer.add_child(objective_tracker_label)
 	objective_label = Label.new()
 	objective_label.position = Vector2(14, 46)
 	objective_label.size = Vector2(650, 30)
@@ -155,7 +163,17 @@ func _create_hud() -> void:
 	add_child(layer)
 	_refresh_objective_label()
 
+func _refresh_objective_tracker() -> void:
+	if not is_instance_valid(objective_tracker_label):
+		return
+	var lines: Array[String] = []
+	for i in range(OBJECTIVES.size()):
+		var state := "✓" if i < objective_index else ("›" if i == objective_index and not saved_mission_complete else "·")
+		lines.append("%s  %02d  %s" % [state, i + 1, OBJECTIVES[i]])
+	objective_tracker_label.text = "MISSION TRACKER\n" + "\n".join(lines)
+
 func _refresh_objective_label() -> void:
+	_refresh_objective_tracker()
 	if objective_index >= OBJECTIVES.size():
 		objective_label.text = "MISSION COMPLETE  |  Evidence verified"
 	else:
