@@ -16,6 +16,9 @@ var save_system: ShadowFrontSaveSystem
 var saved_mission_complete: bool = false
 var world_environment_node: WorldEnvironment
 var pause_menu: ShadowFrontPauseMenu
+var interaction_prompt_label: Label
+var squad_dialogue_label: Label
+var squad_dialogue_time_remaining: float = 0.0
 
 func _ready() -> void:
 	_create_environment()
@@ -354,8 +357,13 @@ func _on_companion_interaction() -> void:
 		return
 	if companion.global_position.distance_to(player.global_position) > 3.5:
 		return
-	mission_status_label.text = "SQUAD LINK  |  " + companion.get_radio_line(mission_manager.current_objective_index)
+	var radio_line := companion.get_radio_line(mission_manager.current_objective_index)
+	mission_status_label.text = "SQUAD LINK  |  " + radio_line
 	mission_status_label.add_theme_color_override("font_color", Color(0.60, 0.83, 0.95))
+	if is_instance_valid(squad_dialogue_label):
+		squad_dialogue_label.text = "ELIAS ROOK  /  " + radio_line
+		squad_dialogue_label.visible = true
+		squad_dialogue_time_remaining = 4.8
 
 func _open_terminal_intel() -> void:
 	if has_meta("intel_overlay_layer") or mission_manager.current_objective_index != 1:
@@ -604,6 +612,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_on_companion_interaction()
 
+func _process(delta: float) -> void:
+	_update_interaction_feedback()
+	if squad_dialogue_time_remaining > 0.0:
+		squad_dialogue_time_remaining = maxf(0.0, squad_dialogue_time_remaining - delta)
+		if squad_dialogue_time_remaining <= 0.0 and is_instance_valid(squad_dialogue_label):
+			squad_dialogue_label.visible = false
+
+func _update_interaction_feedback() -> void:
+	if not is_instance_valid(interaction_prompt_label) or not is_instance_valid(player):
+		return
+	if has_meta("deployment_briefing_layer") or has_meta("intel_overlay_layer") or has_meta("mission_complete_layer"):
+		interaction_prompt_label.visible = false
+		return
+	var prompt_text := ""
+	if mission_manager.current_objective_index == 1 and player.global_position.distance_to(Vector3(0.0, 0.0, -24.0)) <= 3.5:
+		prompt_text = "E   ACCESS INCIDENT LOG"
+	elif is_instance_valid(companion) and companion.global_position.distance_to(player.global_position) <= 3.5:
+		prompt_text = "E   CHECK IN WITH ELIAS"
+	interaction_prompt_label.text = prompt_text
+	interaction_prompt_label.visible = not prompt_text.is_empty()
+
 func _physics_process(_delta: float) -> void:
 	if is_instance_valid(player) and player.global_position.y < -5.0:
 		player.global_position = mission_manager.checkpoint_position
@@ -632,4 +661,36 @@ func _create_hud() -> void:
 	mission_status_label.add_theme_color_override("font_color", Color(1.0, 0.78, 0.42))
 	mission_status_label.add_theme_font_size_override("font_size", 16)
 	panel.add_child(mission_status_label)
+
+	interaction_prompt_label = Label.new()
+	interaction_prompt_label.name = "InteractionPrompt"
+	interaction_prompt_label.anchor_left = 0.20
+	interaction_prompt_label.anchor_right = 0.80
+	interaction_prompt_label.anchor_top = 0.885
+	interaction_prompt_label.anchor_bottom = 0.93
+	interaction_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_prompt_label.add_theme_font_size_override("font_size", 19)
+	interaction_prompt_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.52))
+	interaction_prompt_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.95))
+	interaction_prompt_label.add_theme_constant_override("outline_size", 5)
+	interaction_prompt_label.visible = false
+	layer.add_child(interaction_prompt_label)
+
+	squad_dialogue_label = Label.new()
+	squad_dialogue_label.name = "SquadDialogueSubtitle"
+	squad_dialogue_label.anchor_left = 0.12
+	squad_dialogue_label.anchor_right = 0.88
+	squad_dialogue_label.anchor_top = 0.82
+	squad_dialogue_label.anchor_bottom = 0.875
+	squad_dialogue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	squad_dialogue_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	squad_dialogue_label.add_theme_font_size_override("font_size", 20)
+	squad_dialogue_label.add_theme_color_override("font_color", Color(0.90, 0.94, 0.93))
+	squad_dialogue_label.add_theme_color_override("font_outline_color", Color(0.015, 0.025, 0.03, 0.98))
+	squad_dialogue_label.add_theme_constant_override("outline_size", 5)
+	squad_dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	squad_dialogue_label.visible = false
+	layer.add_child(squad_dialogue_label)
+
 	add_child(layer)
