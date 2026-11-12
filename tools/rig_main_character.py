@@ -44,7 +44,7 @@ def orient_and_normalize(meshes):
     extents = [maxs[i] - mins[i] for i in range(3)]
     up_axis = max(range(3), key=lambda i: extents[i])
     if up_axis == 0:
-        rotation = Matrix.Rotation(-math.pi / 2.0, 4, "Y")
+        rotation = Matrix.Rotation(math.pi / 2.0, 4, "Y")
     elif up_axis == 1:
         rotation = Matrix.Rotation(math.pi / 2.0, 4, "X")
     else:
@@ -201,6 +201,13 @@ def make_action(armature, name, frame_poses, frame_end):
         set_pose(armature, rotations)
         for pose_bone in armature.pose.bones:
             pose_bone.keyframe_insert(data_path="rotation_euler", frame=frame, group=pose_bone.name)
+    # Smooth, repeatable locomotion curves. The final key duplicates the first
+    # pose at the cycle boundary so the loop does not snap.
+    for fcurve in getattr(action, "fcurves", []):
+        for key in fcurve.keyframe_points:
+            key.interpolation = "BEZIER"
+            key.handle_left_type = "AUTO_CLAMPED"
+            key.handle_right_type = "AUTO_CLAMPED"
     return action
 
 
