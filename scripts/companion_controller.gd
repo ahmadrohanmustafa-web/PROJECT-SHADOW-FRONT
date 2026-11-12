@@ -7,9 +7,9 @@ class_name ShadowFrontCompanion
 const CHARACTER_SCENE: PackedScene = preload("res://assets/characters/player_character.glb")
 const CHARACTER_VISUAL_SCRIPT = preload("res://scripts/character_visual.gd")
 
-@export var follow_speed: float = 3.6
+@export var follow_speed: float = 4.0
 @export var follow_distance: float = 2.4
-@export var catch_up_distance: float = 8.0
+@export var catch_up_distance: float = 6.5
 
 var follow_target: Node3D
 var dialogue_index: int = 0
