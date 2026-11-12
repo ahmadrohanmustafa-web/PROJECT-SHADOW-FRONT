@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/characters/player_character.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/character_visual.gd" id="3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.35
@@ -13,9 +15,15 @@ script = ExtResource("1")
 position = Vector3(0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_player")
 
+[node name="CharacterVisual" type="Node3D" parent="."]
+script = ExtResource("3")
+
+[node name="MainCharacter" parent="CharacterVisual" instance=ExtResource("2")]
+
 [node name="Head" type="Node3D" parent="."]
 position = Vector3(0, 1.55, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Head"]
 current = true
 fov = 75.0
+cull_mask = 1

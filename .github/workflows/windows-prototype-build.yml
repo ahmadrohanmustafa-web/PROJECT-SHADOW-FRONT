@@ -9,6 +9,8 @@ on:
       - "export_presets.cfg"
       - "scenes/**"
       - "scripts/**"
+      - "assets/**"
+      - "tools/rig_main_character.py"
       - ".github/workflows/windows-prototype-build.yml"
 
 permissions:
@@ -18,10 +20,27 @@ jobs:
   export-windows:
     name: Export Windows prototype
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Generate rigged main-character asset when missing
+        shell: pwsh
+        run: |
+          $assetPath = Join-Path $env:GITHUB_WORKSPACE "assets\characters\player_character.glb"
+          if (!(Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+            choco install blender --no-progress -y
+            $blender = Get-ChildItem -Path "C:\Program Files\Blender Foundation" -Filter "blender.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (!$blender) { throw "Blender executable was not found after installation." }
+            New-Item -ItemType Directory -Force -Path (Split-Path $assetPath) | Out-Null
+            & $blender.FullName --background --python tools/rig_main_character.py -- --input scene.gltf --output $assetPath
+            if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+              throw "Main-character rig generation failed."
+            }
+          } else {
+            Write-Host "Using the committed rigged main-character asset."
+          }
 
       - name: Install Godot 4.7.2 and export templates
         uses: chickensoft-games/setup-godot@v2
@@ -37,17 +56,13 @@ jobs:
           if (!(Test-Path -LiteralPath $godotExe -PathType Leaf)) {
             throw "Godot executable not found at expected setup path: $godotExe"
           }
-
           $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-version-stdout.txt"
           $stderrPath = Join-Path $env:RUNNER_TEMP "godot-version-stderr.txt"
           Write-Host "Using Godot executable: $godotExe"
           $process = Start-Process -FilePath $godotExe -ArgumentList @("--version") -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
-
           if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
           if (Test-Path $stderrPath) { Get-Content $stderrPath }
-          if ($process.ExitCode -ne 0) {
-            throw "Godot version check failed with exit code $($process.ExitCode)."
-          }
+          if ($process.ExitCode -ne 0) { throw "Godot version check failed with exit code $($process.ExitCode)." }
 
       - name: Export Windows build and verify output
         shell: pwsh
@@ -57,51 +72,21 @@ jobs:
           $exePath = Join-Path $buildDir "PROJECT_SHADOW_FRONT_Prototype.exe"
           $godotExe = Join-Path $env:USERPROFILE "godot\Godot_v4.7.2-stable_win64.exe"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
-
-          if (!(Test-Path -LiteralPath $godotExe -PathType Leaf)) {
-            throw "Godot executable not found at expected setup path: $godotExe"
-          }
-
-          Write-Host "Using Godot executable: $godotExe"
-          Write-Host "Export destination: $exePath"
-
-          # Godot's Windows build uses a GUI executable; launch it as a process
-          # and explicitly quote every argument containing spaces.
+          if (!(Test-Path -LiteralPath $godotExe -PathType Leaf)) { throw "Godot executable not found at expected setup path: $godotExe" }
           $argumentLine = '--headless --path "{0}" --export-debug "Windows Desktop" "{1}"' -f $env:GITHUB_WORKSPACE, $exePath
           $stdoutPath = Join-Path $env:RUNNER_TEMP "godot-export-stdout.txt"
           $stderrPath = Join-Path $env:RUNNER_TEMP "godot-export-stderr.txt"
           $process = Start-Process -FilePath $godotExe -ArgumentList $argumentLine -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
-
           Write-Host "Godot export stdout:"
           if (Test-Path $stdoutPath) { Get-Content $stdoutPath }
           Write-Host "Godot export stderr:"
           if (Test-Path $stderrPath) { Get-Content $stderrPath }
-
-          if ($process.ExitCode -ne 0) {
-            throw "Godot Windows export failed with exit code $($process.ExitCode). See captured output above."
-          }
-
-          Write-Host "Files produced in build directory:"
-          Get-ChildItem -LiteralPath $buildDir -Force -Recurse | ForEach-Object {
-            if (!$_.PSIsContainer) {
-              Write-Host "$($_.FullName) ($($_.Length) bytes)"
-            }
-          }
-
-          if (!(Test-Path -LiteralPath $exePath -PathType Leaf)) {
-            throw "Windows executable was not created at: $exePath"
-          }
-
+          if ($process.ExitCode -ne 0) { throw "Godot Windows export failed with exit code $($process.ExitCode)." }
+          if (!(Test-Path -LiteralPath $exePath -PathType Leaf)) { throw "Windows executable was not created at: $exePath" }
           $exe = Get-Item -LiteralPath $exePath
-          if ($exe.Length -le 0) {
-            throw "Windows executable is empty."
-          }
-
+          if ($exe.Length -le 0) { throw "Windows executable is empty." }
           $pckFiles = @(Get-ChildItem -LiteralPath $buildDir -Filter "*.pck" -File -Recurse)
-          if ($pckFiles.Count -eq 0) {
-            throw "External PCK file was not created in the build directory."
-          }
-
+          if ($pckFiles.Count -eq 0) { throw "External PCK file was not created in the build directory." }
           Write-Host "Verified executable: $($exe.FullName) ($($exe.Length) bytes)"
           Write-Host "Verified PCK files: $($pckFiles.Count)"
 

@@ -1,0 +1,48 @@
+name: Build and publish main-character rig
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scene.gltf"
+      - "scene.bin"
+      - "textures/**"
+      - "tools/rig_main_character.py"
+      - ".github/workflows/rig-main-character.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rig-character:
+    name: Generate rigged character and locomotion clips
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+
+      - name: Build and verify rigged GLB
+        run: |
+          mkdir -p assets/characters
+          blender --background --python tools/rig_main_character.py -- \
+            --input scene.gltf \
+            --output assets/characters/player_character.glb
+
+      - name: Publish generated character asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/characters/player_character.glb
+          if git diff --cached --quiet; then
+            echo "Generated character asset is unchanged."
+          else
+            git commit -m "Generate rigged main character and locomotion animations"
+            git push origin HEAD:main
+          fi
