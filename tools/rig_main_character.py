@@ -135,41 +135,47 @@ def build_armature(width, depth):
 
 
 def bind_mesh(mesh, armature):
+    # Deterministic weights avoid heat-weight failures on disconnected equipment islands.
     deselect_all()
-    mesh.select_set(True)
-    armature.select_set(True)
-    bpy.context.view_layer.objects.active = armature
-    try:
-        bpy.ops.object.parent_set(type="ARMATURE_AUTO")
-        if not any(mod.type == "ARMATURE" for mod in mesh.modifiers):
-            raise RuntimeError("Automatic weights did not create an armature modifier.")
-        return "automatic weights"
-    except Exception as exc:
-        print("Automatic weights unavailable; using nearest-bone fallback:", exc)
-        for group in list(mesh.vertex_groups):
-            mesh.vertex_groups.remove(group)
-        if mesh.parent == armature:
-            mesh.parent = None
-        modifier = mesh.modifiers.new("CharacterArmature", "ARMATURE")
-        modifier.object = armature
-        mesh.parent = armature
-        deform_bones = [b for b in armature.data.bones if b.use_deform]
-        groups = {b.name: mesh.vertex_groups.new(name=b.name) for b in deform_bones}
-        for vertex in mesh.data.vertices:
-            point = vertex.co
-            best_name = None
-            best_distance = float("inf")
-            for bone in deform_bones:
-                a, b = bone.head_local, bone.tail_local
-                segment = b - a
-                denom = max(segment.length_squared, 1e-8)
-                t = max(0.0, min(1.0, (point - a).dot(segment) / denom))
-                distance = (point - (a + segment*t)).length_squared
-                if distance < best_distance:
-                    best_distance, best_name = distance, bone.name
-            if best_name:
-                groups[best_name].add([vertex.index], 1.0, "REPLACE")
-        return "nearest-bone fallback"
+    for modifier in list(mesh.modifiers):
+        if modifier.type == "ARMATURE":
+            mesh.modifiers.remove(modifier)
+    for group in list(mesh.vertex_groups):
+        mesh.vertex_groups.remove(group)
+
+    deform_bones = [bone for bone in armature.data.bones if bone.use_deform]
+    if not deform_bones:
+        raise RuntimeError("Generated armature contains no deform bones.")
+    groups = {bone.name: mesh.vertex_groups.new(name=bone.name) for bone in deform_bones}
+    segments = []
+    for bone in deform_bones:
+        head, tail = bone.head_local.copy(), bone.tail_local.copy()
+        direction = tail - head
+        segments.append((bone.name, head, direction, max(direction.length_squared, 1e-8)))
+
+    for vertex in mesh.data.vertices:
+        point = vertex.co
+        distances = []
+        for name, head, direction, length_sq in segments:
+            t = max(0.0, min(1.0, (point - head).dot(direction) / length_sq))
+            closest = head + direction * t
+            distances.append(((point - closest).length_squared, name))
+        distances.sort(key=lambda item: item[0])
+        nearest = distances[:2]
+        if len(nearest) == 1 or nearest[0][0] < 1e-10:
+            groups[nearest[0][1]].add([vertex.index], 1.0, "REPLACE")
+        else:
+            inverse = [1.0 / max(distance, 1e-8) for distance, _ in nearest]
+            total = sum(inverse)
+            for (_, name), weight in zip(nearest, inverse):
+                groups[name].add([vertex.index], weight / total, "REPLACE")
+
+    mesh.parent = armature
+    modifier = mesh.modifiers.new("CharacterArmature", "ARMATURE")
+    modifier.object = armature
+    modifier.use_vertex_groups = True
+    mesh.data.update()
+    return "deterministic two-bone weights"
 
 
 def set_pose(armature, rotations):
