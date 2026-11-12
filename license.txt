@@ -1,0 +1,11 @@
+Model Information:
+* title:	Solider
+* source:	https://sketchfab.com/3d-models/solider-3d546c9e0b2049828eab3f06d3199097
+* author:	FoFLaFe (https://sketchfab.com/FoFLaFe)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Solider" (https://sketchfab.com/3d-models/solider-3d546c9e0b2049828eab3f06d3199097) by FoFLaFe (https://sketchfab.com/FoFLaFe) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
