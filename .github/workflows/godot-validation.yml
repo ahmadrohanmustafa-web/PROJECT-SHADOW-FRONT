@@ -44,10 +44,22 @@ jobs:
         run: godot --headless --editor --path . --quit
 
       - name: Launch campaign menu headlessly
-        run: godot --headless --path . --quit-after 120
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . --quit-after 120 2>&1 | tee build-menu.log
+          if grep -E "SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:" build-menu.log; then exit 1; fi
 
       - name: Launch Mission 02 headlessly
-        run: godot --headless --path . res://scenes/mission_02.tscn --quit-after 120
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . res://scenes/mission_02.tscn --quit-after 120 2>&1 | tee build-mission-02.log
+          if grep -E "SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:" build-mission-02.log; then exit 1; fi
 
       - name: Launch Mission 03 headlessly
-        run: godot --headless --path . res://scenes/mission_03.tscn --quit-after 120
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . res://scenes/mission_03.tscn --quit-after 120 2>&1 | tee build-mission-03.log
+          if grep -E "SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:" build-mission-03.log; then exit 1; fi
