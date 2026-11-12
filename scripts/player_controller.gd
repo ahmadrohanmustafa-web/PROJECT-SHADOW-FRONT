@@ -17,7 +17,6 @@ class_name ShadowFrontPlayer
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
-@onready var character_visual: Node3D = $CharacterVisual
 
 var gravity: float = float(ProjectSettings.get_setting("physics/3d/default_gravity"))
 var is_crouching: bool = false
@@ -86,7 +85,6 @@ func _physics_process(delta: float) -> void:
 
 	camera.fov = move_toward(camera.fov, sprint_fov if target_speed == sprint_speed and input_vector.length() > 0.0 else standing_fov, 30.0 * delta)
 	move_and_slide()
-	character_visual.call("update_motion", Vector2(velocity.x, velocity.z).length(), is_on_floor())
 
 func _set_crouching(enabled: bool) -> void:
 	if is_crouching == enabled:
