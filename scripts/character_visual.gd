@@ -40,7 +40,7 @@ func _resolve_clips() -> void:
 	for clip_name in animation_player.get_animation_list():
 		var clip := animation_player.get_animation(clip_name)
 		if clip:
-			clip.loop_mode = Animation.LOOP
+			clip.loop_mode = Animation.LOOP_LINEAR
 
 
 func _find_clip(keyword: String) -> StringName:
