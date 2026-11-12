@@ -19,7 +19,7 @@ func _ready() -> void:
 	for item in meshes:
 		var mesh_instance := item as MeshInstance3D
 		if mesh_instance:
-			mesh_instance.layers = 2
+			mesh_instance.layers = 1
 
 
 func update_motion(horizontal_speed: float, grounded: bool) -> void:
