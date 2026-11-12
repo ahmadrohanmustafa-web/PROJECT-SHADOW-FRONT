@@ -1,18 +1,21 @@
 extends Node3D
 class_name ShadowFrontCompanion
 
-## Lightweight, non-combat squad partner for the Northstar prototype.
-## The companion follows at a comfortable distance and never blocks the player.
+## Squad companion using the uploaded, rigged Solider model.
+## The player remains first-person; this character is a visible squad member.
+
+const CHARACTER_SCENE: PackedScene = preload("res://assets/characters/player_character.glb")
+const CHARACTER_VISUAL_SCRIPT = preload("res://scripts/character_visual.gd")
 
 @export var follow_speed: float = 3.6
 @export var follow_distance: float = 2.4
 @export var catch_up_distance: float = 8.0
 
 var follow_target: Node3D
-var body_mesh: MeshInstance3D
-var head_mesh: MeshInstance3D
 var dialogue_index: int = 0
 var nameplate: Label3D
+var character_visual: ShadowFrontCharacterVisual
+var previous_position: Vector3
 var radio_lines: Array[String] = [
 	"I'm with you. Let's bring that data home.",
 	"Keep moving. The rendezvous is back across the yard.",
@@ -33,6 +36,7 @@ func get_radio_line(objective_index: int = -1) -> String:
 
 func _ready() -> void:
 	_build_character()
+	previous_position = global_position
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(follow_target):
@@ -51,69 +55,31 @@ func _process(delta: float) -> void:
 	look_target.y = global_position.y
 	if global_position.distance_to(look_target) > 0.1:
 		look_at(look_target, Vector3.UP)
+	if character_visual:
+		var speed := global_position.distance_to(previous_position) / maxf(delta, 0.0001)
+		character_visual.update_motion(speed, true)
+	previous_position = global_position
 
 func _build_character() -> void:
-	var uniform := StandardMaterial3D.new()
-	uniform.albedo_color = Color(0.19, 0.27, 0.28)
-	uniform.roughness = 0.92
-	var vest := StandardMaterial3D.new()
-	vest.albedo_color = Color(0.38, 0.34, 0.25)
-	vest.roughness = 0.95
-	var skin := StandardMaterial3D.new()
-	skin.albedo_color = Color(0.48, 0.36, 0.28)
-	skin.roughness = 0.9
-	var pack := StandardMaterial3D.new()
-	pack.albedo_color = Color(0.12, 0.16, 0.16)
-	pack.roughness = 1.0
+	var visual_root := Node3D.new()
+	visual_root.name = "CharacterVisual"
+	visual_root.set_script(CHARACTER_VISUAL_SCRIPT)
+	add_child(visual_root)
+	character_visual = visual_root as ShadowFrontCharacterVisual
 
-	body_mesh = _add_capsule("Uniform", 0.34, 1.15, Vector3(0.0, 0.95, 0.0), uniform)
-	_add_box("Field vest", Vector3(0.0, 1.0, -0.20), Vector3(0.62, 0.55, 0.22), vest)
-	_add_box("Field pack", Vector3(0.0, 1.08, 0.27), Vector3(0.42, 0.58, 0.22), pack)
-	head_mesh = _add_sphere("Head", 0.23, Vector3(0.0, 1.72, 0.0), skin)
-	_add_box("Shoulder marker", Vector3(0.34, 1.22, -0.02), Vector3(0.12, 0.12, 0.12), vest)
+	var soldier := CHARACTER_SCENE.instantiate() as Node3D
+	soldier.name = "SoliderSquadModel"
+	visual_root.add_child(soldier)
+
 	nameplate = Label3D.new()
 	nameplate.name = "SquadNameplate"
 	nameplate.text = "ELIAS ROOK  /  COMMS"
-	nameplate.position = Vector3(0.0, 2.25, 0.0)
+	nameplate.position = Vector3(0.0, 2.15, 0.0)
 	nameplate.font_size = 24
 	nameplate.modulate = Color(0.72, 0.86, 0.88)
 	nameplate.outline_size = 6
 	nameplate.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(nameplate)
-
-func _add_capsule(node_name: String, radius: float, height: float, at: Vector3, material: Material) -> MeshInstance3D:
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = node_name
-	var capsule := CapsuleMesh.new()
-	capsule.radius = radius
-	capsule.height = height
-	mesh_instance.mesh = capsule
-	mesh_instance.position = at
-	mesh_instance.material_override = material
-	add_child(mesh_instance)
-	return mesh_instance
-
-func _add_sphere(node_name: String, radius: float, at: Vector3, material: Material) -> MeshInstance3D:
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = node_name
-	var sphere := SphereMesh.new()
-	sphere.radius = radius
-	sphere.height = radius * 2.0
-	mesh_instance.mesh = sphere
-	mesh_instance.position = at
-	mesh_instance.material_override = material
-	add_child(mesh_instance)
-	return mesh_instance
-
-func _add_box(node_name: String, at: Vector3, dimensions: Vector3, material: Material) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = node_name
-	var box := BoxMesh.new()
-	box.size = dimensions
-	mesh_instance.mesh = box
-	mesh_instance.position = at
-	mesh_instance.material_override = material
-	add_child(mesh_instance)
 
 func _get_obstacle_avoidance(desired_position: Vector3) -> Vector3:
 	var origin := global_position + Vector3.UP * 1.0
