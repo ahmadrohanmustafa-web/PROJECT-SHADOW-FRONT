@@ -26,9 +26,9 @@ func update_motion(horizontal_speed: float, grounded: bool) -> void:
 	if not animation_player or not grounded:
 		return
 	var target := idle_clip
-	if horizontal_speed > 5.2:
+	if horizontal_speed > 3.7:
 		target = run_clip
-	elif horizontal_speed > 0.25:
+	elif horizontal_speed > 0.18:
 		target = walk_clip
 	_play_clip(target)
 
