@@ -24,8 +24,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y blender python3-numpy
           mkdir -p assets/characters
-          blender --background --python-expr "import numpy; print('Blender NumPy:', numpy.__version__)" 
-          blender --background --python tools/rig_main_character.py -- \
+          blender --background --python-exit-code 1 --python-expr "import numpy; print('Blender NumPy:', numpy.__version__)" 
+          blender --background --python-exit-code 1 --python tools/rig_main_character.py -- \
             --input scene.gltf \
             --output assets/characters/player_character.glb
           test -s assets/characters/player_character.glb
