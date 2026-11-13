@@ -1,8 +1,7 @@
 extends Node3D
 class_name ShadowFrontCompanion
 
-## Squad companion using the uploaded, rigged Solider model.
-## The player remains first-person; this character is a visible squad member.
+## Visible squad companion. The player remains first-person.
 
 const CHARACTER_SCENE: PackedScene = preload("res://assets/characters/player_character.glb")
 const CHARACTER_VISUAL_SCRIPT = preload("res://scripts/character_visual.gd")
@@ -41,35 +40,51 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_instance_valid(follow_target):
 		return
+
 	var behind_target := follow_target.global_transform.basis * Vector3(1.25, 0.0, 2.0)
 	var desired_position := follow_target.global_position + behind_target
 	desired_position.y = 0.0
 	desired_position += _get_obstacle_avoidance(desired_position)
+
 	var distance := global_position.distance_to(desired_position)
 	if distance > follow_distance:
 		var speed_scale := 1.0
 		if distance > catch_up_distance:
 			speed_scale = 1.35
 		global_position = global_position.move_toward(desired_position, follow_speed * speed_scale * delta)
+
+	# Keep the companion anchored to the mission ground plane.
+	global_position.y = 0.0
+
 	var look_target := follow_target.global_position
 	look_target.y = global_position.y
 	if global_position.distance_to(look_target) > 0.1:
 		look_at(look_target, Vector3.UP)
+
 	if character_visual:
-		var speed := global_position.distance_to(previous_position) / maxf(delta, 0.0001)
-		character_visual.update_motion(speed, true)
+		var horizontal_delta := Vector2(
+			global_position.x - previous_position.x,
+			global_position.z - previous_position.z
+		)
+		var horizontal_speed := horizontal_delta.length() / maxf(delta, 0.0001)
+		character_visual.update_motion(horizontal_speed, true)
 	previous_position = global_position
 
 func _build_character() -> void:
+	# IMPORTANT: assemble the complete subtree BEFORE adding it to the scene tree.
+	# Otherwise CharacterVisual._ready() runs before the GLB/AnimationPlayer exists.
 	var visual_root := Node3D.new()
 	visual_root.name = "CharacterVisual"
 	visual_root.set_script(CHARACTER_VISUAL_SCRIPT)
-	add_child(visual_root)
-	character_visual = visual_root as ShadowFrontCharacterVisual
 
 	var soldier := CHARACTER_SCENE.instantiate() as Node3D
 	soldier.name = "SoliderSquadModel"
+	# The source soldier is authored lying on its front. Rotate the model around
+	# its local lateral axis so the head/torso/legs are upright in Godot's Y-up world.
+	soldier.rotation_degrees.x = 90.0
 	visual_root.add_child(soldier)
+	add_child(visual_root)
+	character_visual = visual_root as ShadowFrontCharacterVisual
 
 	nameplate = Label3D.new()
 	nameplate.name = "SquadNameplate"
