@@ -78,6 +78,7 @@ func _build_character() -> void:
 
 	var soldier := CHARACTER_SCENE.instantiate() as Node3D
 	soldier.name = "SoliderSquadModel"
+	_orient_soldier_from_mesh_geometry(soldier)
 	# The Blender rig generator already normalizes the mesh to upright Z and
 	# the glTF exporter converts Blender Z-up to Godot Y-up. Do NOT rotate it
 	# again here: that applies a second quarter-turn and lays the soldier over.
@@ -94,6 +95,82 @@ func _build_character() -> void:
 	nameplate.outline_size = 6
 	nameplate.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	add_child(nameplate)
+
+func _orient_soldier_from_mesh_geometry(soldier: Node3D) -> void:
+	# Runtime safety net: inspect the imported mesh itself, not guessed source axes.
+	# The dominant geometric body axis is aligned to Godot's Y-up direction.
+	var points: Array[Vector3] = []
+	var mesh_nodes := soldier.find_children("*", "MeshInstance3D", true, false)
+	for node in mesh_nodes:
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface_index in range(mesh_instance.mesh.get_surface_count()):
+			var arrays := mesh_instance.mesh.surface_get_arrays(surface_index)
+			if arrays.is_empty() or arrays[Mesh.ARRAY_VERTEX] == null:
+				continue
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			for vertex in vertices:
+				points.append(mesh_instance.transform * vertex)
+	if points.size() < 8:
+		push_warning("Elias orientation check skipped: imported mesh vertices unavailable.")
+		return
+
+	var center := Vector3.ZERO
+	for point in points:
+		center += point
+	center /= float(points.size())
+
+	var covariance := [
+		[0.0, 0.0, 0.0],
+		[0.0, 0.0, 0.0],
+		[0.0, 0.0, 0.0]
+	]
+	for point in points:
+		var d: Vector3 = point - center
+		covariance[0][0] += d.x * d.x
+		covariance[0][1] += d.x * d.y
+		covariance[0][2] += d.x * d.z
+		covariance[1][0] += d.y * d.x
+		covariance[1][1] += d.y * d.y
+		covariance[1][2] += d.y * d.z
+		covariance[2][0] += d.z * d.x
+		covariance[2][1] += d.z * d.y
+		covariance[2][2] += d.z * d.z
+
+	var spreads := [covariance[0][0], covariance[1][1], covariance[2][2]]
+	var seed := 0
+	if spreads[1] > spreads[seed]:
+		seed = 1
+	if spreads[2] > spreads[seed]:
+		seed = 2
+	var axis := Vector3.ZERO
+	axis[seed] = 1.0
+	for iteration in range(48):
+		var next_axis := Vector3(
+			covariance[0][0] * axis.x + covariance[0][1] * axis.y + covariance[0][2] * axis.z,
+			covariance[1][0] * axis.x + covariance[1][1] * axis.y + covariance[1][2] * axis.z,
+			covariance[2][0] * axis.x + covariance[2][1] * axis.y + covariance[2][2] * axis.z
+		)
+		if next_axis.length_squared() < 0.00000001:
+			push_warning("Elias orientation check failed: no dominant body axis.")
+			return
+		next_axis = next_axis.normalized()
+		if (next_axis - axis).length() < 0.00001 or (next_axis + axis).length() < 0.00001:
+			axis = next_axis
+			break
+		axis = next_axis
+
+	var correction := Quaternion(axis.normalized(), Vector3.UP)
+	soldier.basis = Basis(correction) * soldier.basis
+
+	# Put the lowest transformed mesh point on the local ground plane.
+	var lowest_y := INF
+	for point in points:
+		var corrected := correction * (point - center)
+		lowest_y = minf(lowest_y, corrected.y)
+	soldier.position.y -= lowest_y
+	print("Elias runtime upright correction; principal axis=", axis, " ground_offset=", lowest_y)
 
 func _get_obstacle_avoidance(desired_position: Vector3) -> Vector3:
 	var origin := global_position + Vector3.UP * 1.0
