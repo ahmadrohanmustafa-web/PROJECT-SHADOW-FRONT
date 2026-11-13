@@ -40,31 +40,74 @@ def bounds_for(meshes):
 
 
 def orient_and_normalize(meshes):
-    mins, maxs = bounds_for(meshes)
-    extents = [maxs[i] - mins[i] for i in range(3)]
-    up_axis = max(range(3), key=lambda i: extents[i])
-    if up_axis == 0:
-        rotation = Matrix.Rotation(math.pi / 2.0, 4, "Y")
-    elif up_axis == 1:
-        rotation = Matrix.Rotation(math.pi / 2.0, 4, "X")
-    else:
-        rotation = Matrix.Identity(4)
-    if up_axis != 2:
-        for obj in meshes:
-            obj.data.transform(rotation)
+    # Do not infer the character's up axis from the largest WORLD axis-aligned
+    # bounding-box extent. Imported models may be rotated diagonally, which
+    # makes that heuristic select the wrong axis and leave the soldier prone.
+    # Instead, find the dominant geometric axis with a covariance/PCA power
+    # iteration, then align that axis with Blender Z (the rig's vertical axis).
+    points = [v.co.copy() for obj in meshes for v in obj.data.vertices]
+    if not points:
+        raise RuntimeError("The source glTF contains no mesh vertices.")
+
+    center = sum(points, Vector()) / float(len(points))
+    covariance = [[0.0, 0.0, 0.0] for _ in range(3)]
+    for point in points:
+        delta = point - center
+        for row in range(3):
+            for col in range(3):
+                covariance[row][col] += delta[row] * delta[col]
+
+    # Seed from the axis with the greatest spread, then converge on the
+    # principal component. This is stable for rotated/diagonal source meshes.
+    spreads = [covariance[i][i] for i in range(3)]
+    seed_axis = max(range(3), key=lambda i: spreads[i])
+    axis = Vector((1.0 if seed_axis == 0 else 0.0,
+                   1.0 if seed_axis == 1 else 0.0,
+                   1.0 if seed_axis == 2 else 0.0))
+    for _ in range(48):
+        nxt = Vector((
+            covariance[0][0]*axis.x + covariance[0][1]*axis.y + covariance[0][2]*axis.z,
+            covariance[1][0]*axis.x + covariance[1][1]*axis.y + covariance[1][2]*axis.z,
+            covariance[2][0]*axis.x + covariance[2][1]*axis.y + covariance[2][2]*axis.z,
+        ))
+        if nxt.length_squared < 1e-12:
+            raise RuntimeError("Could not determine the soldier's principal body axis.")
+        nxt.normalize()
+        if (nxt - axis).length < 1e-7 or (nxt + axis).length < 1e-7:
+            axis = nxt
+            break
+        axis = nxt
+
+    if max(spreads) < 1e-8:
+        raise RuntimeError("Source character geometry has no usable body axis.")
+    rotation = axis.rotation_difference(Vector((0.0, 0.0, 1.0))).to_matrix().to_4x4()
+    for obj in meshes:
+        for vertex in obj.data.vertices:
+            vertex.co = rotation @ (vertex.co - center)
+        obj.data.update()
 
     mins, maxs = bounds_for(meshes)
     height = maxs[2] - mins[2]
     if height <= 0.01:
-        raise RuntimeError("Could not identify a usable character height.")
+        raise RuntimeError("Could not identify a usable character height after PCA alignment.")
     scale = 1.8 / height
-    offset = Vector(((mins[0] + maxs[0]) * 0.5, (mins[1] + maxs[1]) * 0.5, mins[2]))
+    offset = Vector(((mins[0] + maxs[0]) * 0.5,
+                     (mins[1] + maxs[1]) * 0.5,
+                     mins[2]))
     for obj in meshes:
         for vertex in obj.data.vertices:
             vertex.co = (vertex.co - offset) * scale
         obj.data.update()
+
     mins, maxs = bounds_for(meshes)
-    return max(0.35, maxs[0] - mins[0]), max(0.25, maxs[1] - mins[1])
+    final_height = maxs[2] - mins[2]
+    if abs(final_height - 1.8) > 0.03:
+        raise RuntimeError("Character orientation normalization failed: vertical extent is not 1.8m.")
+    width = max(0.35, maxs[0] - mins[0])
+    depth = max(0.25, maxs[1] - mins[1])
+    print("Character PCA orientation:", tuple(round(float(v), 4) for v in axis))
+    print("Normalized bounds (W/D/H):", round(width, 3), round(depth, 3), round(final_height, 3))
+    return width, depth
 
 
 def join_meshes(meshes):
