@@ -162,12 +162,16 @@ func _orient_soldier_from_mesh_geometry(soldier: Node3D) -> void:
 		axis = next_axis
 
 	var correction := Quaternion(axis.normalized(), Vector3.UP)
-	soldier.basis = Basis(correction) * soldier.basis
+	# The imported soldier's forward axis is quarter-turned relative to Godot's
+	# -Z forward convention. Apply a local yaw correction after standing him up.
+	var face_forward := Quaternion(Vector3.UP, deg_to_rad(90.0))
+	var combined_correction := face_forward * correction
+	soldier.basis = Basis(combined_correction) * soldier.basis
 
 	# Put the lowest transformed mesh point on the local ground plane.
 	var lowest_y := INF
 	for point in points:
-		var corrected := correction * point
+		var corrected := combined_correction * point
 		lowest_y = minf(lowest_y, corrected.y)
 	soldier.position.y -= lowest_y
 	print("Elias runtime upright correction; principal axis=", axis, " ground_offset=", lowest_y)
