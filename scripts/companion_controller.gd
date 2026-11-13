@@ -6,7 +6,7 @@ class_name ShadowFrontCompanion
 const CHARACTER_SCENE: PackedScene = preload("res://assets/characters/player_character.glb")
 const CHARACTER_VISUAL_SCRIPT = preload("res://scripts/character_visual.gd")
 
-@export var follow_speed: float = 4.0
+@export var follow_speed: float = 2.2
 @export var follow_distance: float = 2.4
 @export var catch_up_distance: float = 6.5
 
@@ -53,7 +53,6 @@ func _process(delta: float) -> void:
 			speed_scale = 1.35
 		global_position = global_position.move_toward(desired_position, follow_speed * speed_scale * delta)
 
-	# Keep the companion anchored to the mission ground plane.
 	global_position.y = 0.0
 
 	var look_target := follow_target.global_position
@@ -71,17 +70,17 @@ func _process(delta: float) -> void:
 	previous_position = global_position
 
 func _build_character() -> void:
-	# IMPORTANT: assemble the complete subtree BEFORE adding it to the scene tree.
-	# Otherwise CharacterVisual._ready() runs before the GLB/AnimationPlayer exists.
+	# Build the full subtree before entering the scene tree so the visual script
+	# can discover the GLB AnimationPlayer during its deferred initialization.
 	var visual_root := Node3D.new()
 	visual_root.name = "CharacterVisual"
 	visual_root.set_script(CHARACTER_VISUAL_SCRIPT)
 
 	var soldier := CHARACTER_SCENE.instantiate() as Node3D
 	soldier.name = "SoliderSquadModel"
-	# The source soldier is authored lying on its front. Rotate the model around
-	# its local lateral axis so the head/torso/legs are upright in Godot's Y-up world.
-	soldier.rotation_degrees.x = 90.0
+	# The Blender rig generator already normalizes the mesh to upright Z and
+	# the glTF exporter converts Blender Z-up to Godot Y-up. Do NOT rotate it
+	# again here: that applies a second quarter-turn and lays the soldier over.
 	visual_root.add_child(soldier)
 	add_child(visual_root)
 	character_visual = visual_root as ShadowFrontCharacterVisual
