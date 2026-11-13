@@ -167,7 +167,7 @@ func _orient_soldier_from_mesh_geometry(soldier: Node3D) -> void:
 	# Put the lowest transformed mesh point on the local ground plane.
 	var lowest_y := INF
 	for point in points:
-		var corrected := correction * (point - center)
+		var corrected := correction * point
 		lowest_y = minf(lowest_y, corrected.y)
 	soldier.position.y -= lowest_y
 	print("Elias runtime upright correction; principal axis=", axis, " ground_offset=", lowest_y)
